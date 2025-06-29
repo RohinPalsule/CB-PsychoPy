@@ -184,3 +184,28 @@ for i,probe in enumerate(practice_probes):
 
 
 print(desert_black_remember[0])
+
+import matplotlib.pyplot as plt
+
+# Assume `payout` is a 2D list or NumPy array: shape (3, num_trials)
+# If you haven't already defined `payout`, run the generation code first.
+
+# Plotting
+plt.figure(figsize=(12, 6))
+
+# Plot each bandit's payout trajectory
+plt.plot(payout[0][0:], label='Bandit 1', color='green')
+plt.plot(payout[1][0:], label='Bandit 2', color='red')
+plt.plot(payout[2][0:], label='Bandit 3', color='blue')
+for d in [30, 70, 110, 150, 190]:
+    print(d)
+    plt.axvspan(d,d+10, color='pink', alpha=0.3)
+    plt.axvline(d,color='black')
+# Formatting
+plt.xlabel('Trial')
+plt.ylabel('Reward Value')
+plt.title('Bandit Payouts Over Trials')
+plt.legend()
+plt.grid(True)
+plt.tight_layout()
+plt.show()

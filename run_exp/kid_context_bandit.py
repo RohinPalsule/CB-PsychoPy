@@ -67,6 +67,13 @@ no_reward = image_prefix + "rewards/reward_no.png"
 
 probe_ship = image_prefix + "miscellaneous/cargo_ship.png"
 bye_island = image_prefix + "travel/bye.png"
+
+best_pirate = image_prefix + "tutorial/prac_best_pirate.png"
+incorrect_quiz_feedback = ["That’s incorrect. You win bonus money by collecting gold coins.",
+                           "That’s incorrect. Which pirate is the best may change during your time on the island.",
+                           "That’s incorrect. How good a pirate is at robbing ships will change from island to island!",
+                           "That’s incorrect. You should remember the island where a pirate robbed a ship. To help you remember, you can make up a story associating the object on the ship with the island."
+                           ]
 # Practice Probes
 practice_probes = [
   "probes/probes-256.png",
@@ -167,11 +174,11 @@ probe = "Once you've chosen a pirate, you’ll be shown the ship they are robbin
 changepoint = "How successful a pirate is at robbing ships will depend on the island you’re on. A pirate may have visited this island many times before and gained a lot of practice robbing ships there.\n\nSo, they’re more likely to be successful than a pirate who has never visited the island before."+ space_bar
 drift = "How successful a pirate is at robbing ships can also change over the time spent on the island.\nShips may hear from islanders about the pirates coming and will improve their protections against the attack. This may make it harder to rob them.\nShips may also become lazy and weaken the strength of their protections. This may make it easier to rob them.\n\nThings are always changing on the high seas! So, try your best to pay attention!"+ space_bar
 summary = "Let's go over the instructions quickly again. You have two important things to do:\n\n 1. Pick the pirate who is the best at robbing ships on the current island. \n\n2. Remember on which island a ship was robbed. The amount of bonus money you can win depends on both.\n\n\nLet’s try a practice game. The game will start by showing you the pirates. First, pick a pirate using the 1, 2, 3 keys on your keyboard. When you are shown a ship, try to remember which island you’re on by making up a story.\n\nThis is just a practice game, so you’re not playing for money.\n\nGood luck! This game will be very difficult but try your best!"+ space_bar
-quiz_intro = "Good job on the practice game! Now, you will be asked some true or false questions to make sure you really understand the rules of the game. Press <b>'1'</b> on the keyboard for true and press <b>'2'</b> for false."+ space_bar
-q1 = "You win bonus money by collecting gold coins.Press 1 for true and press  2 for false."+ space_bar
-q2 = "The pirate who is the best at robbing ships when you first arrive on the island will definitely still be the best when you leave the island. Press 1 for true and press  2 for false."+ space_bar
-q3 = "The pirate who is the best at robbing ships on the first island will be the best on every other island.Press 1 for true and press  2 for false."+ space_bar
-q4 = "You should remember the island where a pirate robbed a ship.Press 1 for true and press  2 for false."+ space_bar
+quiz_intro = "Good job on the practice game! Now, you will be asked some true or false questions to make sure you really understand the rules of the game. Press '1' on the keyboard for true and press '2' for false."+ space_bar
+q1 = "You win bonus money by collecting gold coins.\n\n\n\nPress 1 for true and press 2 for false."
+q2 = "The pirate who is the best at robbing ships when you first arrive on the island will definitely still be the best when you leave the island.\n\n\n\nPress 1 for true and press 2 for false."
+q3 = "The pirate who is the best at robbing ships on the first island will be the best on every other island.\n\n\n\nPress 1 for true and press 2 for false."
+q4 = "You should remember the island where a pirate robbed a ship.\n\n\n\nPress 1 for true and press 2 for false."
 
 # Reward
 import numpy as np
@@ -703,65 +710,38 @@ def practice_blue_loop():
             show_text("Press the '1' key on the keyboard to pick blue beard.",image_path=tutorial_blue_pirate,x=1.2,y=1.2,height=0.0,text_height=0.05,keys=['1'],img_pos=0.0)
 
 # For the practice quiz
-def run_quiz(questions,choices,correct_answers):
-    """Displays a multiple-choice quiz and checks answers."""
+def run_quiz():
+    """Displays a set of true false quiz questions and checks answers."""
     global failedNum
-    form_items = []
-    win.units = "height" # Quizzes in psychopy need to have units of height, but this is changed at end of quiz
-    for i in range(len(questions)):
-        form_items.append(
-            {"itemText": questions[i], "type": "radio", "options": choices[i]}
-        )
-    form = visual.Form(win, items=form_items, size=(1.1, 0.8), pos=(0, 0), itemPadding=0.1,units="height")
-
-    # Display quiz and wait for responses
-    while not form.complete:
-        form.draw()
-        win.flip()
-        keys = event.getKeys(keyList=['return', 'escape'])
-
-    # Get responses
-    answers = form.getData()
-    responses = [answers[i]['response'] for i in range(len(questions))]
-    # Check correctness
-    correct = True
-    for i in range(len(responses)):
-        if responses[i] != correct_answers[i]:
-            correct = False
-            break  # Stop checking once an incorrect answer is found
-    study.append({
-        "ID": "",
-        "TrialType":f"practice_quiz",
-        "BlockNum": "",
-        "AlienOrder": "",
-        "QuizResp": responses,
-        "QuizFailedNum": failedNum,
-        "TimeElapsed": experiment_clock.getTime(),
-        "RT": "",
-        "PRT": "",
-        "Galaxy":"",
-        "DecayRate": "",
-        "AlienIndex": "",
-        "GemValue": "",
-        "TimeInBlock": ""
-    })
-    # Provide feedback based on correctness
-    if correct==True:
-        feedback_text = "Correct! Press SPACE to continue."
-        # Show feedback
-        feedback = visual.TextStim(win, text=feedback_text, color='black', height=0.07) # Show correct or incorrect
-        feedback.draw()
-        win.flip()
-        win.units = "norm" # Change units back
-        event.waitKeys(keyList=config['params']['BUTTON_NEXTPHASE'])
+    questions = [q1,q2,q3,q4]
+    correct = [True,False,False,True] # Is the first option the correct one
+    allCorrect = True # To check if they get one wrong
+    for i,question in enumerate(questions):
+        stim = visual.TextStim(win, text=question, color='black', height=config['params']['FONT_SIZE'], pos=(0, 0), wrapWidth=config['params']['TEXTBOX_WIDTH']) # Adds whatever text is called
+        stim.draw() # Pushes it to screen
+        win.flip() # Resets screen
+        # Only keys taken in exp (need to change to specify which key to use)
+        keys = event.waitKeys(keyList=[keyList[0],keyList[1]])
+        if keys:
+            key = keys[0]
+            if correct[i]:
+                if keyList[0] in key:
+                    show_text("That's correct!" + space_bar)
+                elif keyList[1] in key:
+                    show_text(incorrect_quiz_feedback[i] + space_bar)
+                    allCorrect= False
+            else:
+                if keyList[0] in key:
+                    show_text(incorrect_quiz_feedback[i] + space_bar)
+                    allCorrect= False
+                elif keyList[1] in key:
+                    show_text("That's correct!" + space_bar)
+    if allCorrect:
+        pass
     else:
-        feedback_text = "Incorrect. Press SPACE to reread the instructions and ry again."
-        failedNum +=1 # log how many times they fail the quiz
-        feedback = visual.TextStim(win, text=feedback_text, color='black', height=0.07)
-        feedback.draw()
-        win.flip()
-        win.units = "norm" # Change units back
-        event.waitKeys(config['params']['BUTTON_3'])
+        show_text("Oops, you missed some questions. Now that you’ve heard the correct answers. Try the quiz again!" + space_bar)
+        run_quiz()
+
 
 def practice_pirates(text=pick_pirate,switch='win'):
     global study,experiment_clock,keyList
@@ -900,9 +880,24 @@ def practice_pirate_loop(duration = 2,setting = 'desert'):
                 travel_trial()
                 show_stacked_images(cavern_welcome,duration=3)
             practice_pirate_loop(setting='cavern')
-        else: show_text("done")
+        else:
+            stim = visual.ImageStim(win, image=best_pirate,size=(1.2,1.2))
+            stim.draw()
+            win.flip()
+            best_key = event.waitKeys(keyList=keyList)
+
+            if best_key:
+                bestkeys = best_key[0]
+                if keyList[0] in bestkeys: # 1
+                    show_text("That's correct! Red beard was the best." + space_bar)
+                if keyList[1] in bestkeys: # 2
+                    show_text("That's incorrect! Red beard was the best."+ space_bar)
+                if keyList[2] in bestkeys: # 3
+                    show_text("That's incorrect! Red beard was the best."+ space_bar)
     else:
-        pass
+        show_image(timeout_img,duration=2)
+        practice_pirate_loop()
+
 
 
 # How data is saved to CSV
@@ -964,9 +959,11 @@ show_stacked_images(desert_welcome,duration=3)
 
 practice_pirate_loop()
 
-# run_quiz(questions=questions,choices=choices,correct_answers=correct_answers)
+show_text(quiz_intro)
 
-# show_text("Now, you'll play a practice game, so you can practice mining space treasure and traveling to new planets.\n\nIn the practice game, you'll be digging up barrels of gems. But, in the real game, you'll be digging up the gems themselves.\n\nPress the space bar to begin practice!", height=0)
+run_quiz()
+
+show_text("Good job! You’re now ready to move on to the real game! Remember this game will be difficult but don't get discouraged and try your best!" + space_bar)
 
 # show_image(img_path=practice_alien,duration=5)
 # dig_instruction(gems=barrel_img)

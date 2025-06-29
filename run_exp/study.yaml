@@ -36,3 +36,5 @@ ship_sequence:
   - "travel/ship_down.png"
   - "travel/ship_up.png"
   - "travel/ship_down.png"
+  - "travel/ship_up.png"
+  - "travel/ship_down.png"

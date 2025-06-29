@@ -23,7 +23,6 @@ monitor.saveMon()
 win = visual.Window(fullscr=True, color='white',allowStencil=True,units = "norm")
 experiment_clock = core.Clock()
 
-
 # Debug and block length
 debug = config.get("debug", False)
 block_length = config["block_length_debug"] if debug else config["block_length"]
@@ -38,14 +37,109 @@ tutorial_blue_pirate = image_prefix + "tutorial/blue.png"
 tutorial_all_pirates = image_prefix + "tutorial/all_pirates.png"
 
 blue_win = image_prefix + "tutorial/blue_win.png"
+black_win = image_prefix + "tutorial/black_win.png"
 red_win = image_prefix + "tutorial/red_win.png"
 white_win = image_prefix + "tutorial/white_win.png"
 blue_no_win = image_prefix + "tutorial/blue_no_win.png"
+black_no_win = image_prefix + "tutorial/black_no_win.png"
 red_no_win = image_prefix + "tutorial/red_no_win.png"
 white_no_win = image_prefix + "tutorial/white_no_win.png"
 timeout_img = image_prefix + "miscellaneous/hurry_up.png"
 
 example_probe = image_prefix + "tutorial/example_probe.png"
+contingency = image_prefix + "tutorial/contingency.png"
+
+# Practice Images
+deck = image_prefix + "miscellaneous/deck.png"
+ahoy = image_prefix + "travel/ahoy.png"
+desert_welcome_text = image_prefix + "travel/welcome_desert.png"
+desert_img = image_prefix + "contexts/context_desert.png"
+cavern_welcome_text = image_prefix + "travel/welcome_cavern.png"
+cavern_img = image_prefix + "contexts/context_cavern.png"
+
+all_pirates = image_prefix + "pirates/pirates_all.png"
+red_pirate = image_prefix + "pirates/red_beard.png"
+white_pirate = image_prefix + "pirates/white_beard.png"
+black_pirate = image_prefix + "pirates/black_beard.png"
+
+reward = image_prefix + "rewards/reward.png"
+no_reward = image_prefix + "rewards/reward_no.png"
+
+probe_ship = image_prefix + "miscellaneous/cargo_ship.png"
+bye_island = image_prefix + "travel/bye.png"
+# Practice Probes
+practice_probes = [
+  "probes/probes-256.png",
+  "probes/probes-257.png",
+  "probes/probes-258.png",
+  "probes/probes-259.png",
+  "probes/probes-260.png"]
+
+practice_probes_cavern = [
+  "probes/probes-261.png",
+  "probes/probes-262.png",
+  "probes/probes-263.png",
+  "probes/probes-264.png",
+  "probes/probes-265.png"
+]
+# Stacked images
+desert_welcome = [deck,desert_img,ahoy,desert_welcome_text]
+desert_pirates = [deck,desert_img,all_pirates]
+desert_red = [deck,desert_img,red_pirate]
+desert_white = [deck,desert_img,white_pirate]
+desert_black = [deck,desert_img,black_pirate]
+desert_bye = [deck,desert_img,bye_island]
+
+desert_red_remember = []
+desert_red_reward = []
+desert_white_remember = []
+desert_white_reward = []
+desert_black_remember = []
+desert_black_reward = []
+
+cavern_welcome = [deck,cavern_img,ahoy,cavern_welcome_text]
+cavern_pirates = [deck,cavern_img,all_pirates]
+cavern_red = [deck,cavern_img,red_pirate]
+cavern_white = [deck,cavern_img,white_pirate]
+cavern_black = [deck,cavern_img,black_pirate]
+cavern_bye = [deck,cavern_img,bye_island]
+
+cavern_red_remember = []
+cavern_red_reward = []
+cavern_white_remember = []
+cavern_white_reward = []
+cavern_black_remember = []
+cavern_black_reward = []
+
+practice_rewards = {
+    1: [reward, reward, reward, no_reward, reward],
+    2: [no_reward, reward, no_reward, reward, no_reward],
+    3: [no_reward, no_reward, reward, no_reward, no_reward]
+}
+practice_rewards_cavern = {
+    1: [reward, reward, reward, no_reward, reward],
+    2: [no_reward, no_reward, reward, no_reward, no_reward],
+    3: [no_reward, reward, no_reward, reward, reward]
+}
+
+for i,probe in enumerate(practice_probes):
+    desert_red_remember.append([deck,desert_img,red_pirate,probe_ship,image_prefix+probe])
+    desert_red_reward.append([deck,desert_img,red_pirate,probe_ship,image_prefix+probe,practice_rewards[1][i]])
+    desert_white_remember.append([deck,desert_img,white_pirate,probe_ship,image_prefix+probe])
+    desert_white_reward.append([deck,desert_img,white_pirate,probe_ship,image_prefix+probe,practice_rewards[2][i]])
+    desert_black_remember.append([deck,desert_img,black_pirate,probe_ship,image_prefix+probe])
+    desert_black_reward.append([deck,desert_img,black_pirate,probe_ship,image_prefix+probe,practice_rewards[3][i]])
+
+for i,probe in enumerate(practice_probes_cavern):
+    cavern_red_remember.append([deck,cavern_img,red_pirate,probe_ship,image_prefix+probe])
+    cavern_red_reward.append([deck,cavern_img,red_pirate,probe_ship,image_prefix+probe,practice_rewards_cavern[1][i]])
+    cavern_white_remember.append([deck,cavern_img,white_pirate,probe_ship,image_prefix+probe])
+    cavern_white_reward.append([deck,cavern_img,white_pirate,probe_ship,image_prefix+probe,practice_rewards_cavern[2][i]])
+    cavern_black_remember.append([deck,cavern_img,black_pirate,probe_ship,image_prefix+probe])
+    cavern_black_reward.append([deck,cavern_img,black_pirate,probe_ship,image_prefix+probe,practice_rewards_cavern[3][i]])
+
+
+
 
 # Instruction init
 space_bar = "\n\n[Press the space bar to continue]"
@@ -58,31 +152,104 @@ goal_of_game_2b = "Then, you'll see if the pirate successfully robbed the ship o
 goal_of_game_2c = "If they were not successful, then you'll get no gold coins, and you'll see a big red x like this:"
 goal_of_game_2d = "How much bonus money you make is based on how many gold coins you collect." + space_bar
 
-probabilistic = "Even the most skilled pirate can not rob EVERY ship. Some ships will have very strong protections against pirate attacks. Blue beard, here, is very, very good at robbing ships, but he won't be successful every time he tries to rob one. You can press the <b>‘1’</b> key on the keyboard to choose him. Try choosing him 10 times to see how often he succeeds at robbing a ship. <img src='run_exp/static/images/tutorial/blue.png' height='500'>"+ space_bar
+probabilistic = "Even the most skilled pirate can not rob EVERY ship.\nSome ships will have very strong protections against pirate attacks.\nBlue beard, here, is very, very good at robbing ships, but he won't be successful every time he tries to rob one.\nYou can press the ‘1’ key on the keyboard to choose him.\nTry choosing him 10 times to see how often he succeeds at robbing a ship."
 blue_beard_outcome = " See, he succeeded in robbing the ships most of the time but not every time. "+ space_bar
-pick_pirate = "From these three pirates, you will get to choose which one you want to rob the next ship. Press the <b>‘1’</b> key on your keyboard to pick the pirate with the red beard. Press <b>‘2’</b> to pick the pirate with the white beard. Press <b>‘3’</b> to pick the pirate with the black beard.Try picking a pirate now!<img src='run_exp/static/images/tutorial/all_pirates.png' height='500'>"+ space_bar
-red_won = "Yay! This pirate succeeded in robbing the ship!<img src='run_exp/static/images/tutorial/red_win.png' height='500'><b>[Press the space bar to continue]</b>"+ space_bar
-white_won = "Yay! This pirate succeeded in robbing the ship!<img src='run_exp/static/images/tutorial/white_win.png' height='500'><b>[Press the space bar to continue]</b>"+ space_bar
-black_won = "Yay! This pirate succeeded in robbing the ship!<img src='run_exp/static/images/tutorial/black_win.png' height='500'><b>[Press the space bar to continue]</b>"+ space_bar
-pick_pirate_agin = "Now try choosing another.<img src='run_exp/static/images/tutorial/all_pirates.png' height='500'>"+ space_bar
-red_loss = "Oh no! This pirate did not succeed in robbing the ship.<img src='run_exp/static/images/tutorial/red_no_win.png' height='500'><b>[Press the space bar to continue]</b>"+ space_bar
-white_loss = "Oh no! This pirate did not succeed in robbing the ship.<img src='run_exp/static/images/tutorial/white_no_win.png' height='500'><b>[Press the space bar to continue]</b>"+ space_bar
-black_loss = "Oh no! This pirate did not succeed in robbing the ship.<img src='run_exp/static/images/tutorial/black_no_win.png' height='500'><b>[Press the space bar to continue]</b>"+ space_bar
-time_out = "If you don’t make your choice fast enough, you’ll have to wait a few seconds before you can make another one. <img src='run_exp/static/images/miscellaneous/hurry_up.png' height='500'>"+ space_bar
-probe = "Once you've chosen a pirate, you’ll be shown the ship they are robbing. You will never rob the same ship twice. Ships can be told apart from one another by the image on them. These are the goods that they sell. See, this ship has a travel mug on it.  You’ll have to remember which island you saw each ship on. You will win more gold coins and hence more bonus money if you remember correctly! To help you remember, you can imagine a story. For example, here, you could imagine a mug full of water in the desert. Or, as another example, if on the forest island, your pirate robbed a ship with an apple on it, you could imagine an apple falling from a tree in the forest. <img src='run_exp/static/images/tutorial/example_probe.png' height='500'>"+ space_bar
-changepoint = "How successful a pirate is at robbing ships will depend on the island you’re on. A pirate may have visited this island many times before and gained a lot of practice robbing ships there.So, they’re more likely to be successful than a pirate who has never visited the island before."+ space_bar
-drift = "How successful a pirate is at robbing ships can also change over the time spent on the island.  Ships may hear from islanders about the pirates coming and will improve their protections against the attack. This may make it harder to rob them. Ships may also become lazy and weaken the strength of their protections. This may make it easier to rob them.\nThings are always changing on the high seas! So, try your best to pay attention!<img src='run_exp/static/images/tutorial/contingency.png' height='500'>"+ space_bar
-summary = "Let's go over the instructions quickly again. You have two important things to do: <b> 1. Pick the pirate who is the best at robbing ships on the current island. </b><b> 2. Remember on which island a ship was robbed. </b>The amount of bonus money you can win depends on both.\nLet’s try a practice game. The game will start by showing you the pirates. First, pick a pirate using the <b> 1, 2, 3 </b> keys on your keyboard. When you are shown a ship, try to remember which island you’re on by making up a story.This is just a practice game, so you’re not playing for money.  Good luck! This game will be very difficult but try your best!"+ space_bar
+pick_pirate = "From these three pirates, you will get to choose which one you want to rob the next ship.\n\nPress the ‘1’ key on your keyboard to pick the pirate with the red beard.\nPress ‘2’ to pick the pirate with the white beard.\nPress ‘3’ to pick the pirate with the black beard.\n\nTry picking a pirate now!"
+red_won = "Yay! This pirate succeeded in robbing the ship!"+ space_bar
+white_won = "Yay! This pirate succeeded in robbing the ship!"+ space_bar
+black_won = "Yay! This pirate succeeded in robbing the ship!"+ space_bar
+pick_pirate_again = "Now try choosing another."
+red_loss = "Oh no! This pirate did not succeed in robbing the ship."+ space_bar
+white_loss = "Oh no! This pirate did not succeed in robbing the ship."+ space_bar
+black_loss = "Oh no! This pirate did not succeed in robbing the ship."+ space_bar
+time_out = "If you don’t make your choice fast enough, you’ll have to wait a few seconds before you can make another one."+ space_bar
+probe = "Once you've chosen a pirate, you’ll be shown the ship they are robbing. You will never rob the same ship twice. Ships can be told apart from one another by the image on them. These are the goods that they sell. See, this ship has a travel mug on it.\n\nYou’ll have to remember which island you saw each ship on. You will win more gold coins and hence more bonus money if you remember correctly! To help you remember, you can imagine a story. For example, here, you could imagine a mug full of water in the desert. Or, as another example, if on the forest island, your pirate robbed a ship with an apple on it, you could imagine an apple falling from a tree in the forest."+ space_bar
+changepoint = "How successful a pirate is at robbing ships will depend on the island you’re on. A pirate may have visited this island many times before and gained a lot of practice robbing ships there.\n\nSo, they’re more likely to be successful than a pirate who has never visited the island before."+ space_bar
+drift = "How successful a pirate is at robbing ships can also change over the time spent on the island.\nShips may hear from islanders about the pirates coming and will improve their protections against the attack. This may make it harder to rob them.\nShips may also become lazy and weaken the strength of their protections. This may make it easier to rob them.\n\nThings are always changing on the high seas! So, try your best to pay attention!"+ space_bar
+summary = "Let's go over the instructions quickly again. You have two important things to do:\n\n 1. Pick the pirate who is the best at robbing ships on the current island. \n\n2. Remember on which island a ship was robbed. The amount of bonus money you can win depends on both.\n\n\nLet’s try a practice game. The game will start by showing you the pirates. First, pick a pirate using the 1, 2, 3 keys on your keyboard. When you are shown a ship, try to remember which island you’re on by making up a story.\n\nThis is just a practice game, so you’re not playing for money.\n\nGood luck! This game will be very difficult but try your best!"+ space_bar
 quiz_intro = "Good job on the practice game! Now, you will be asked some true or false questions to make sure you really understand the rules of the game. Press <b>'1'</b> on the keyboard for true and press <b>'2'</b> for false."+ space_bar
 q1 = "You win bonus money by collecting gold coins.Press 1 for true and press  2 for false."+ space_bar
 q2 = "The pirate who is the best at robbing ships when you first arrive on the island will definitely still be the best when you leave the island. Press 1 for true and press  2 for false."+ space_bar
 q3 = "The pirate who is the best at robbing ships on the first island will be the best on every other island.Press 1 for true and press  2 for false."+ space_bar
 q4 = "You should remember the island where a pirate robbed a ship.Press 1 for true and press  2 for false."+ space_bar
 
+# Reward
+import numpy as np
 
+# ----- Constants -----
+num_bandits = 3
+block_len = 40
+num_blocks = 6
+num_trials = block_len * num_blocks * 2
+init_payoff = [60, 30, 10]
+decayTheta = init_payoff.copy()
+payoff_bounds = [5, 95]
+decay_lambda = 0.6
+drift_noise = 8
 
-# Define individual images
-# 
+rotation_trials = [40, 80, 120, 160, 200, 240, 280, 320, 360, 400, 440]
+deterministic_trials = [30, 70, 110, 150, 190]
+
+# Add bumped deterministic trials
+ctx_bump = 2
+for i in range(len(deterministic_trials)):
+    for j in range(1, ctx_bump):
+        trial_to_add = deterministic_trials[i] + j
+        deterministic_trials.append(trial_to_add)
+
+# ----- Functions -----
+def normal_random():
+    return np.random.normal(loc=0, scale=1)
+
+def mean(x):
+    return sum(x) / len(x)
+
+def rotate_decayTheta(current_decayTheta):
+    bestOpt = np.argmax(current_decayTheta)
+    shuffled = current_decayTheta.copy()
+    while np.argmax(shuffled) == bestOpt:
+        np.random.shuffle(shuffled)
+    return list(shuffled)
+
+# ----- Initialize payout matrix -----
+payout = np.zeros((num_bandits, num_trials))
+for i in range(num_bandits):
+    payout[i][0] = init_payoff[i]
+
+# ----- Main drift loop -----
+for trial_idx in range(num_trials):
+
+    # ROTATION TRIALS: Change which bandit has the highest expected payoff
+    if trial_idx in rotation_trials:
+        decayTheta = rotate_decayTheta(decayTheta)
+
+    # DETERMINISTIC TRIALS: Force the best bandit's value to 100
+    if trial_idx in deterministic_trials:
+        bestOpt = np.argmax(decayTheta)
+        payout[bestOpt][trial_idx] = 100
+
+    # DRIFT: Smooth payoff change from previous value
+    if trial_idx > 0:
+        decay_lambda_eff = 0.95 if trial_idx % block_len < 2 else decay_lambda
+
+        for bandit in range(num_bandits):
+            prev = payout[bandit][trial_idx - 1]
+            theta = decayTheta[bandit]
+            noise = normal_random() * drift_noise
+
+            drifted = decay_lambda_eff * prev + (1 - decay_lambda_eff) * theta + noise
+
+            # Reflect at bounds
+            if drifted > payoff_bounds[1]:
+                drifted = payoff_bounds[1] - (drifted - payoff_bounds[1])
+            elif drifted < payoff_bounds[0]:
+                drifted = payoff_bounds[0] + (payoff_bounds[0] - drifted)
+
+            payout[bandit][trial_idx] = drifted
+
+# Convert to list of lists if needed
+payout_list = payout.tolist()
+
 
 # Sequences
 ship_sequence = [image_prefix + r for r in config["ship_sequence"]]
@@ -102,7 +269,7 @@ dig_sequence = [image_prefix+"dig.jpg", image_prefix+"land.jpg", image_prefix+"d
 index = 0
 first_planet = True
 
-keyList = [config['params']['BUTTON_1'],config['params']['BUTTON_2']]
+keyList = [config['params']['BUTTON_1'],config['params']['BUTTON_2'],config['params']['BUTTON_3']]
 
 if len(sys.argv) < 2: # Call participant ID in terminal
     print("Error: No participant ID provided.")
@@ -201,67 +368,41 @@ def get_galaxy(first=False):
             galaxy = newGalaxy
         
 
-def show_text(text, duration=0, image_path=None,x=1,y=1,height=0,text_height=config['params']['FONT_SIZE'],home=False):
+def show_text(text, duration=0, image_path=None,x=1,y=1,height=0,img_pos = -0.3,text_height=config['params']['FONT_SIZE'],home=False,keys=['space']):
     """Displays a text message either until a key is pressed or for a specified duration (Default unlimited duration)"""
     global text_index,study,experiment_clock
     text_index += 1 # Used for trial data descriptions
 
+    # If there is an image (specified by image_path) it will show it on the screen
+    if image_path:
+        stim_image = visual.ImageStim(win, image=image_path, size=(x, y), pos=(0, img_pos))  # Adjust size as needed
+        stim_image.draw()
+
     stim = visual.TextStim(win, text=text, color='black', height=text_height, pos=(0, height), wrapWidth=config['params']['TEXTBOX_WIDTH']) # Adds whatever text is called
     stim.draw() # Pushes it to screen
 
-    # If there is an image (specified by image_path) it will show it on the screen
-    if image_path:
-        stim_image = visual.ImageStim(win, image=image_path, size=(x, y), pos=(0, -0.3))  # Adjust size as needed
-        stim_image.draw()
-
     win.flip() # Resets screen
-    if home: # Code for when they are at homebase, as there is a 1 minute timer that can be ended early with a keypress
-        timer = core.Clock()
-        while timer.getTime() < duration:
-            keys = event.getKeys(keyList=["space"])
-            if "space" in keys:
-                break 
-    else:
-        if duration > 0: # Only timed instruction is for the too slow img
-            core.wait(duration)
-            study.append({
-                "ID": "",
-                "TrialType":f"too_slow",
-                "BlockNum": "",
-                "AlienOrder": "",
-                "QuizResp": "",
-                "QuizFailedNum": "",
-                "TimeElapsed": experiment_clock.getTime(),
-                "RT": "",
-                "PRT": "",
-                "Galaxy": "",
-                "DecayRate": "",
-                "AlienIndex": "",
-                "GemValue": "",
-                "TimeInBlock": ""
-            }) 
-        else:
-            # Only keys taken in exp (need to change to specify which key to use)
-            event.waitKeys(keyList=["space"])
-            if home == False:
-                study.append({
-                    "ID": "",
-                    "TrialType":f"Instruction_{text_index}",
-                    "BlockNum": "",
-                    "AlienOrder": "",
-                    "QuizResp": "",
-                    "QuizFailedNum": "",
-                    "TimeElapsed": experiment_clock.getTime(),
-                    "RT": "",
-                    "PRT": "",
-                    "Galaxy": "",
-                    "DecayRate": "",
-                    "AlienIndex": "",
-                    "GemValue": "",
-                    "TimeInBlock": ""
-                })
+    # Only keys taken in exp (need to change to specify which key to use)
+    event.waitKeys(keyList=keys)
+    if home == False:
+        study.append({
+            "ID": "",
+            "TrialType":f"Instruction_{text_index}",
+            "BlockNum": "",
+            "AlienOrder": "",
+            "QuizResp": "",
+            "QuizFailedNum": "",
+            "TimeElapsed": experiment_clock.getTime(),
+            "RT": "",
+            "PRT": "",
+            "Galaxy": "",
+            "DecayRate": "",
+            "AlienIndex": "",
+            "GemValue": "",
+            "TimeInBlock": ""
+        })
 
-def show_multi_img_text(texts=[], image_paths=None,x=1,y=1,heights=[],img_pos=[],text_height=config['params']['FONT_SIZE']):
+def show_multi_img_text(texts=[], image_paths=None,x=1,y=1,heights=[],img_pos=[],text_height=config['params']['FONT_SIZE'],keys=['space']):
     """Displays a text message either until a key is pressed or for a specified duration (Default unlimited duration)"""
     global text_index,study,experiment_clock
     text_index += 1 # Used for trial data descriptions
@@ -277,7 +418,7 @@ def show_multi_img_text(texts=[], image_paths=None,x=1,y=1,heights=[],img_pos=[]
             stim_image.draw()
 
     win.flip() # Resets screen
-    event.waitKeys(keyList=["space"])
+    event.waitKeys(keyList=keys)
 
     study.append({
         "ID": "",
@@ -364,6 +505,14 @@ def show_image(img_path, duration=1.5):
     """Displays an image for a given duration"""
     stim = visual.ImageStim(win, image=img_path,size=(1.2,1.2))
     stim.draw()
+    win.flip()
+    core.wait(duration)
+
+def show_stacked_images(img_paths = [], duration=3):
+    """Displays an image for a given duration"""
+    for img_path in img_paths:
+        stim = visual.ImageStim(win, image=img_path,size=(1.2,1.2))
+        stim.draw()
     win.flip()
     core.wait(duration)
 
@@ -535,6 +684,24 @@ def travel_trial():
     })
     win.flip()
 
+# For the practice instructions
+def practice_blue_loop():
+    """Displays 10 practice trials hard coded to be 3 win, 1 no win, 3 win, 1 no win, 2 win"""
+    for i in range(0,3):
+        show_image(img_path=blue_win,duration=1.5)
+        show_text("Press the '1' key on the keyboard to pick blue beard.",image_path=tutorial_blue_pirate,x=1.2,y=1.2,height=0.0,text_height=0.05,keys=['1'],img_pos=0.0)
+    show_image(img_path=blue_no_win,duration=1.5)
+    show_text("Press the '1' key on the keyboard to pick blue beard.",image_path=tutorial_blue_pirate,x=1.2,y=1.2,height=0.0,text_height=0.05,keys=['1'],img_pos=0.0)
+    for i in range(0,3):
+        show_image(img_path=blue_win,duration=1.5)
+        show_text("Press the '1' key on the keyboard to pick blue beard.",image_path=tutorial_blue_pirate,x=1.2,y=1.2,height=0.0,text_height=0.05,keys=['1'],img_pos=0.0)
+    show_image(img_path=blue_no_win,duration=1.5)
+    show_text("Press the '1' key on the keyboard to pick blue beard.",image_path=tutorial_blue_pirate,x=1.2,y=1.2,height=0.0,text_height=0.05,keys=['1'],img_pos=0.0)
+    for i in range(0,2):
+        show_image(img_path=blue_win,duration=1.5)
+        if i != 1:
+            show_text("Press the '1' key on the keyboard to pick blue beard.",image_path=tutorial_blue_pirate,x=1.2,y=1.2,height=0.0,text_height=0.05,keys=['1'],img_pos=0.0)
+
 # For the practice quiz
 def run_quiz(questions,choices,correct_answers):
     """Displays a multiple-choice quiz and checks answers."""
@@ -595,26 +762,45 @@ def run_quiz(questions,choices,correct_answers):
         win.flip()
         win.units = "norm" # Change units back
         event.waitKeys(config['params']['BUTTON_3'])
-        # repeat_inst() # Repeat initial instructions along with quiz
 
+def practice_pirates(text=pick_pirate,switch='win'):
+    global study,experiment_clock,keyList
 
+    # If there is an image (specified by image_path) it will show it on the screen
+    stim_image = visual.ImageStim(win, image=tutorial_all_pirates, size=(1, 1), pos=(0, -0.3))  # Adjust size as needed
+    stim_image.draw()
 
-# Repeat instructions if they fail the quiz
-# def repeat_inst():
-#     show_text("Howdy! In this experiment, you’ll be an explorer traveling through space to collect space treasure. Your mission is to collect as much treasure as possible. Press the space bar to begin reading the instructions!",image_path=intro_ast,y=0.7,x=0.4)
-#     show_text("As a space explorer, you’ll visit different planets to dig for space treasure, these pink gems. The more space treasure you mine, the more bonus payment you’ll win! \n\n[Press the space bar to continue]",image_path=intro_gem_img)
-#     show_text("When you’ve arrived at a new planet, you will dig once.\n\nThen, you get to decide if you want to stay on the planet and dig again or travel to a new planet and dig there. \n\nTo stay and dig, press the letter ‘A’ on the keyboard. Try pressing it now!",image_path=land_img,height=0.6,x=1,y=1)
-#     dig_instruction(practice=True)
-#     show_text("The longer you mine a planet the fewer gems you’ll get with each dig.\n\nWhen gems are running low, you may want to travel to a new planet that hasn’t been overmined.\n\nPlanets are very far apart in this galaxy, so it will take some time to travel between them.\n\nThere are lots and lots of planets for you to visit, so you won’t be able to return to any planets you’ve already visited.\n\nTo leave this planet and travel to a new one, press the letter ‘L’ on the keyboard. Try pressing it now!",image_path=intro_travel,height=0.6,x=0.8,y=0.8,text_height=0.05)
-#     travel_trial()
-#     show_text("When you arrive at a new planet, an alien from that planet will greet you!\n\n[Press the space bar to continue]",image_path=intro_alien,height=0.6,y=1,x=1)
-#     show_text("If you’re not fast enough in making a choice, you’ll have to wait a few seconds before you can make another one.\n\nYou can’t dig for more gems or travel to new planets. You just have to sit and wait.\n\n[Press the space bar to continue]",image_path=timeout_img,height=0.5,x=1,y=1)
-#     show_text("After digging and traveling for a while, you’ll be able to take a break at home base.\n\nYou can spend at most 1 minute at home base — there are still a lot of gems left to collect!\n\nYou will spend 30 minutes mining gems and traveling to new planets no matter what.\n\nYou will visit home base every 6 minutes, so, you will visit home base four times during the game.\n\n[Press the space bar to continue]",image_path=home_base,height=0.5,x=1,y=1,text_height=0.05)
-#     run_quiz(questions=questions,choices=choices,correct_answers=correct_answers)
+    stim = visual.TextStim(win, text=text, color='black', height=config['params']['FONT_SIZE'], pos=(0,0.6), wrapWidth=config['params']['TEXTBOX_WIDTH']) # Adds whatever text is called
+    stim.draw() # Pushes it to screen
+    win.flip()
+    resp_key = event.waitKeys(keyList=keyList)
+    if resp_key:
+        key = resp_key[0] # RT used for data collection
+        if keyList[0] in key: # 1
+            won_text = red_won
+            pirate = red_win
+            loss_text = red_loss
+            pirate_loss=red_no_win
+        if keyList[1] in key: # 2
+            won_text = white_won
+            pirate = white_win
+            loss_text = white_loss
+            pirate_loss=white_no_win
+        if keyList[2] in key: # 3
+            won_text = black_won
+            pirate = black_win
+            loss_text = black_loss
+            pirate_loss=black_no_win
+    
+    if switch == 'win':
+        show_text(text=won_text,height=0.6,image_path=pirate)
+    elif switch == 'nowin':
+        show_text(text=loss_text,height=0.6,image_path=pirate_loss)
 
-# 1 minute rest at homebase for breaks
-
+            
 # Where the main task is run
+
+
 def block_loop(blockNum):
     """Main task loop divided into blocks"""
     global gem,decay,alien_index,study,first_planet,block_time
@@ -657,6 +843,68 @@ def block_loop(blockNum):
     win.flip()
     core.wait(1)
 
+
+curr_trial = 0
+def practice_pirate_loop(duration = 2,setting = 'desert'):
+    """For choosing the pirate, getting the probe, and seeing if there is a reward"""
+    global curr_trial
+    if setting == 'desert':
+        location = desert_pirates
+    elif setting == 'cavern':
+        location = cavern_pirates
+    
+    for img_path in location:
+        stim = visual.ImageStim(win, image=img_path,size=(1.2,1.2))
+        stim.draw()
+    response_clock = core.Clock()
+    win.flip()
+    resp_key = event.waitKeys(keyList=keyList,timeStamped=response_clock,maxWait=duration)
+    
+    if resp_key:
+        key,RT = resp_key[0] # RT used for data collection
+        if setting == 'desert':
+            if keyList[0] in key: # 1
+                pirateChoice = desert_red
+                pirateProbe = desert_red_remember[curr_trial]
+                pirateReward = desert_red_reward[curr_trial]
+            if keyList[1] in key: # 2
+                pirateChoice = desert_white
+                pirateProbe = desert_white_remember[curr_trial]
+                pirateReward = desert_white_reward[curr_trial]
+            if keyList[2] in key: # 3
+                pirateChoice = desert_black
+                pirateProbe = desert_black_remember[curr_trial]
+                pirateReward = desert_black_reward[curr_trial]
+        elif setting == 'cavern':
+            if keyList[0] in key: # 1
+                pirateChoice = cavern_red
+                pirateProbe = cavern_red_remember[curr_trial-5]
+                pirateReward = cavern_red_reward[curr_trial-5]
+            if keyList[1] in key: # 2
+                pirateChoice = cavern_white
+                pirateProbe = cavern_white_remember[curr_trial-5]
+                pirateReward = cavern_white_reward[curr_trial-5]
+            if keyList[2] in key: # 3
+                pirateChoice = cavern_black
+                pirateProbe = cavern_black_remember[curr_trial-5]
+                pirateReward = cavern_black_reward[curr_trial-5]
+        show_stacked_images(img_paths=pirateChoice,duration=1)
+        show_stacked_images(img_paths=pirateProbe,duration=1)
+        show_stacked_images(img_paths=pirateReward,duration=1)
+        curr_trial +=1
+        if curr_trial < 5:
+            practice_pirate_loop()
+        elif curr_trial >=5 and curr_trial < 10:
+            if curr_trial == 5:
+                show_stacked_images(desert_bye)
+                travel_trial()
+                show_stacked_images(cavern_welcome,duration=3)
+            practice_pirate_loop(setting='cavern')
+        else: show_text("done")
+    else:
+        pass
+
+
 # How data is saved to CSV
 def save_data(participant_id, trials):
     """Save collected data to a CSV file, automatically detecting headers."""
@@ -686,22 +934,35 @@ def save_data(participant_id, trials):
 
 show_text(welcome_txt)
 
-show_text(different_places,image_path= all_contexts,height=0.3)
+# show_text(different_places,image_path= all_contexts,height=0.3)
 
-show_text(goal_of_game_1,image_path=tutorial_ship,height=0.3)
+# show_text(goal_of_game_1,image_path=tutorial_ship,height=0.3)
 
-show_multi_img_text([goal_of_game_2a,goal_of_game_2b,goal_of_game_2c,goal_of_game_2d],image_paths=[tutorial_all_pirates,tutorial_reward,tutorial_noreward],heights=[0.8,0.25,-0.25,-0.8],img_pos=[0.5,0,-0.5],x=0.3,y=0.3)
-# dig_instruction(practice=True)
+# show_multi_img_text([goal_of_game_2a,goal_of_game_2b,goal_of_game_2c,goal_of_game_2d],image_paths=[tutorial_all_pirates,tutorial_reward,tutorial_noreward],heights=[0.8,0.25,-0.25,-0.8],img_pos=[0.5,0,-0.5],x=0.3,y=0.3)
 
-# show_text("The longer you mine a planet the fewer gems you’ll get with each dig.\n\nWhen gems are running low, you may want to travel to a new planet that hasn’t been overmined.\n\nPlanets are very far apart in this galaxy, so it will take some time to travel between them.\n\nThere are lots and lots of planets for you to visit, so you won’t be able to return to any planets you’ve already visited.\n\nTo leave this planet and travel to a new one, press the letter ‘L’ on the keyboard. Try pressing it now!",image_path=intro_travel,height=0.6,x=0.8,y=0.8,text_height=0.05)
+# show_text(probabilistic,image_path=tutorial_blue_pirate,height=0.5,keys=['1'])
 
-# travel_trial()
+# # practice_blue_loop()
 
-# show_text("When you arrive at a new planet, an alien from that planet will greet you!\n\n[Press the space bar to continue]",image_path=intro_alien,height=0.6,y=1,x=1)
+# show_text(blue_beard_outcome,keys=['space'])
 
-# show_text("If you’re not fast enough in making a choice, you’ll have to wait a few seconds before you can make another one.\n\nYou can’t dig for more gems or travel to new planets. You just have to sit and wait.\n\n[Press the space bar to continue]",image_path=timeout_img,height=0.5,x=1,y=1)
+# practice_pirates()
 
-# show_text("After digging and traveling for a while, you’ll be able to take a break at home base.\n\nYou can spend at most 1 minute at home base — there are still a lot of gems left to collect!\n\nYou will spend 30 minutes mining gems and traveling to new planets no matter what.\n\nYou will visit home base every 6 minutes, so, you will visit home base four times during the game.\n\n[Press the space bar to continue]",image_path=home_base,height=0.5,x=1,y=1,text_height=0.05)
+# practice_pirates(text=pick_pirate_again,switch='nowin')
+
+# show_text(text=time_out,height=0.5,image_path=timeout_img)
+
+# show_text(text=probe,height=0.6,image_path=example_probe,text_height=0.05)
+
+# show_text(text=changepoint)
+
+# show_text(text=drift,height=0.5,image_path=contingency,img_pos=-0.4)
+
+# show_text(text=summary)
+
+show_stacked_images(desert_welcome,duration=3)
+
+practice_pirate_loop()
 
 # run_quiz(questions=questions,choices=choices,correct_answers=correct_answers)
 

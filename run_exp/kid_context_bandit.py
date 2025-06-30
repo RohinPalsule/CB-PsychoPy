@@ -5,7 +5,7 @@ import csv
 import sys 
 import os
 import yaml
-
+import random
 # Load config
 with open("study.yaml", "r") as f:
     config = yaml.safe_load(f)
@@ -56,7 +56,7 @@ desert_welcome_text = image_prefix + "travel/welcome_desert.png"
 desert_img = image_prefix + "contexts/context_desert.png"
 cavern_welcome_text = image_prefix + "travel/welcome_cavern.png"
 cavern_img = image_prefix + "contexts/context_cavern.png"
-
+remember_text_img = image_prefix + "miscellaneous/remember.png"
 all_pirates = image_prefix + "pirates/pirates_all.png"
 red_pirate = image_prefix + "pirates/red_beard.png"
 white_pirate = image_prefix + "pirates/white_beard.png"
@@ -69,6 +69,7 @@ probe_ship = image_prefix + "miscellaneous/cargo_ship.png"
 bye_island = image_prefix + "travel/bye.png"
 
 best_pirate = image_prefix + "tutorial/prac_best_pirate.png"
+source_practice = image_prefix + "tutorial/prac_source.png"
 incorrect_quiz_feedback = ["That’s incorrect. You win bonus money by collecting gold coins.",
                            "That’s incorrect. Which pirate is the best may change during your time on the island.",
                            "That’s incorrect. How good a pirate is at robbing ships will change from island to island!",
@@ -130,23 +131,24 @@ practice_rewards_cavern = {
 }
 
 for i,probe in enumerate(practice_probes):
-    desert_red_remember.append([deck,desert_img,red_pirate,probe_ship,image_prefix+probe])
-    desert_red_reward.append([deck,desert_img,red_pirate,probe_ship,image_prefix+probe,practice_rewards[1][i]])
-    desert_white_remember.append([deck,desert_img,white_pirate,probe_ship,image_prefix+probe])
-    desert_white_reward.append([deck,desert_img,white_pirate,probe_ship,image_prefix+probe,practice_rewards[2][i]])
-    desert_black_remember.append([deck,desert_img,black_pirate,probe_ship,image_prefix+probe])
-    desert_black_reward.append([deck,desert_img,black_pirate,probe_ship,image_prefix+probe,practice_rewards[3][i]])
+    desert_red_remember.append([deck,desert_img,red_pirate,probe_ship,image_prefix+probe,remember_text_img])
+    desert_red_reward.append([deck,desert_img,red_pirate,probe_ship,image_prefix+probe,remember_text_img,practice_rewards[1][i]])
+    desert_white_remember.append([deck,desert_img,white_pirate,probe_ship,image_prefix+probe,remember_text_img])
+    desert_white_reward.append([deck,desert_img,white_pirate,probe_ship,image_prefix+probe,remember_text_img,practice_rewards[2][i]])
+    desert_black_remember.append([deck,desert_img,black_pirate,probe_ship,image_prefix+probe,remember_text_img])
+    desert_black_reward.append([deck,desert_img,black_pirate,probe_ship,image_prefix+probe,remember_text_img,practice_rewards[3][i]])
 
 for i,probe in enumerate(practice_probes_cavern):
-    cavern_red_remember.append([deck,cavern_img,red_pirate,probe_ship,image_prefix+probe])
-    cavern_red_reward.append([deck,cavern_img,red_pirate,probe_ship,image_prefix+probe,practice_rewards_cavern[1][i]])
-    cavern_white_remember.append([deck,cavern_img,white_pirate,probe_ship,image_prefix+probe])
-    cavern_white_reward.append([deck,cavern_img,white_pirate,probe_ship,image_prefix+probe,practice_rewards_cavern[2][i]])
-    cavern_black_remember.append([deck,cavern_img,black_pirate,probe_ship,image_prefix+probe])
-    cavern_black_reward.append([deck,cavern_img,black_pirate,probe_ship,image_prefix+probe,practice_rewards_cavern[3][i]])
+    cavern_red_remember.append([deck,cavern_img,red_pirate,probe_ship,image_prefix+probe,remember_text_img])
+    cavern_red_reward.append([deck,cavern_img,red_pirate,probe_ship,image_prefix+probe,remember_text_img,practice_rewards_cavern[1][i]])
+    cavern_white_remember.append([deck,cavern_img,white_pirate,probe_ship,image_prefix+probe,remember_text_img])
+    cavern_white_reward.append([deck,cavern_img,white_pirate,probe_ship,image_prefix+probe,remember_text_img,practice_rewards_cavern[2][i]])
+    cavern_black_remember.append([deck,cavern_img,black_pirate,probe_ship,image_prefix+probe,remember_text_img])
+    cavern_black_reward.append([deck,cavern_img,black_pirate,probe_ship,image_prefix+probe,remember_text_img,practice_rewards_cavern[3][i]])
 
-
-
+# Init trials
+curr_trial = 0
+curr_prac_trial = 0
 
 # Instruction init
 space_bar = "\n\n[Press the space bar to continue]"
@@ -185,6 +187,7 @@ import numpy as np
 
 # ----- Constants -----
 num_bandits = 3
+first_block = 30
 block_len = 40
 num_blocks = 6
 num_trials = block_len * num_blocks * 2
@@ -257,6 +260,103 @@ for trial_idx in range(num_trials):
 # Convert to list of lists if needed
 payout_list = payout.tolist()
 
+probabilities = {
+    1: payout[0] * 0.01,
+    2: payout[1] * 0.01,
+    3: payout[2] * 0.01
+}
+
+ifReward = {key: np.random.binomial(1, prob) for key, prob in probabilities.items()}
+
+reward_imgs = {
+    key: np.where(value == 1, reward, no_reward)
+    for key, value in ifReward.items()
+}
+
+# Valid probes (seen in task) and Invalid (foils during memory phase)
+valid_probe_images = []
+invalid_probe_images = []
+for i in range(1,231): # 230 trials (30 trials first block + 40 trials * 5 other blocks)
+    if i < 10:   
+        valid_probe_images.append(image_prefix + f"probes/probes-0{i}.png")
+    else:
+        valid_probe_images.append(image_prefix + f"probes/probes-{i}.png")
+for i in range(231,256): # 25 trials (wrong probe trials during testing)
+    invalid_probe_images.append(image_prefix + f"probes/probes-{i}.png")
+
+random.shuffle(valid_probe_images)
+random.shuffle(invalid_probe_images)
+
+# Context-based trial order
+
+contexts = [image_prefix + "contexts/context_coast.png",
+            image_prefix + "contexts/context_countryside.png",
+            image_prefix + "contexts/context_mountain.png",
+            image_prefix + "contexts/context_forest.png",
+            image_prefix + "contexts/context_highway.png",
+            image_prefix + "contexts/context_city.png"]
+
+welcomeArray = [image_prefix + "travel/welcome_coast.png",
+                image_prefix + "travel/welcome_meadow.png",
+                image_prefix + "travel/welcome_mountain.png",
+                image_prefix + "travel/welcome_forest.png",
+                image_prefix + "travel/welcome_road.png",
+                image_prefix + "travel/welcome_city.png"]
+
+indices = list(range(len(contexts)))
+random.shuffle(indices)
+
+contexts = [contexts[i] for i in indices]
+welcomeArray = [welcomeArray[i] for i in indices]
+
+stacked_all_pirates = []
+stacked_red_remember = []
+stacked_red_reward = []
+stacked_white_remember = []
+stacked_white_reward = []
+stacked_black_remember = []
+stacked_black_reward = []
+context_labels = []
+stacked_planet_welcome = []
+stacked_red_pirate = []
+stacked_white_pirate = []
+stacked_black_pirate = []
+stacked_island_bye = []
+stacked_island_nopirate = []
+
+for context_idx,context in enumerate(contexts):
+    if context_idx == 0:
+        for trial_idx in range(first_block):
+            stacked_planet_welcome.append([deck,context,ahoy,welcomeArray[context_idx]])
+            stacked_island_nopirate.append([deck,context])
+            stacked_all_pirates.append([deck,context,all_pirates])
+            stacked_red_pirate.append([deck,context,red_pirate])
+            stacked_red_remember.append([deck,context,red_pirate,probe_ship,valid_probe_images[trial_idx]])
+            stacked_red_reward.append([deck,context,red_pirate,probe_ship,valid_probe_images[trial_idx],reward_imgs[1][trial_idx]])
+            stacked_white_pirate.append([deck,context,white_pirate])
+            stacked_white_remember.append([deck,context,white_pirate,probe_ship,valid_probe_images[trial_idx]])
+            stacked_white_reward.append([deck,context,white_pirate,probe_ship,valid_probe_images[trial_idx],reward_imgs[2][trial_idx]])
+            stacked_black_pirate.append([deck,context,black_pirate])
+            stacked_black_remember.append([deck,context,black_pirate,probe_ship,valid_probe_images[trial_idx]])
+            stacked_black_reward.append([deck,context,black_pirate,probe_ship,valid_probe_images[trial_idx],reward_imgs[3][trial_idx]])
+            stacked_island_bye.append([deck,context,bye_island])
+            context_labels.append(context.split("contexts/context_")[-1].split(".png")[0])
+    else:
+        for trial_idx in range(block_len):
+            stacked_planet_welcome.append([deck,context,ahoy,welcomeArray[context_idx]])
+            stacked_island_nopirate.append([deck,context])
+            stacked_all_pirates.append([deck,context,all_pirates])
+            stacked_red_pirate.append([deck,context,red_pirate])
+            stacked_red_remember.append([deck,context,red_pirate,probe_ship,valid_probe_images[trial_idx]])
+            stacked_red_reward.append([deck,context,red_pirate,probe_ship,valid_probe_images[trial_idx],reward_imgs[1][trial_idx]])
+            stacked_white_pirate.append([deck,context,white_pirate])
+            stacked_white_remember.append([deck,context,white_pirate,probe_ship,valid_probe_images[trial_idx]])
+            stacked_white_reward.append([deck,context,white_pirate,probe_ship,valid_probe_images[trial_idx],reward_imgs[2][trial_idx]])
+            stacked_black_pirate.append([deck,context,black_pirate])
+            stacked_black_remember.append([deck,context,black_pirate,probe_ship,valid_probe_images[trial_idx]])
+            stacked_black_reward.append([deck,context,black_pirate,probe_ship,valid_probe_images[trial_idx],reward_imgs[3][trial_idx]])
+            stacked_island_bye.append([deck,context,bye_island])
+            context_labels.append(context.split("contexts/context_")[-1].split(".png")[0])
 
 # Sequences
 ship_sequence = [image_prefix + r for r in config["ship_sequence"]]
@@ -271,8 +371,6 @@ prt_clock = core.Clock() # Initialized prt timer
 block_time = 0
 text_index = 0
 failedNum = 0
-dig_index = 0
-dig_sequence = [image_prefix+"dig.jpg", image_prefix+"land.jpg", image_prefix+"dig.jpg"]
 index = 0
 first_planet = True
 
@@ -443,70 +541,6 @@ def show_multi_img_text(texts=[], image_paths=None,x=1,y=1,heights=[],img_pos=[]
         "GemValue": "",
         "TimeInBlock": ""
                 })
-                        
-# Function below is for moving on to real game or continuing practice
-# def show_button_text(text,height=0.3,text_height=config['params']['FONT_SIZE']):
-#     """Displays a text message either until a button is pressed or for a specified duration (Default unlimited duration)"""
-#     global text_index,experiment_clock,study
-#     text_index += 1
-    
-#     stim = visual.TextStim(win, text=text, color='black', height=text_height, pos=(0, height), wrapWidth=config['params']['TEXTBOX_WIDTH'])
-
-#     button1 = visual.Rect(win, width=0.3, height=0.1, pos=(-0.3, -0.1), fillColor='gray')
-#     button2 = visual.Rect(win, width=0.3, height=0.1, pos=(0.3, -0.1), fillColor='gray')
-
-#     label1 = visual.TextStim(win, text="Practice game again", pos=(-0.3, -0.1), color='black', height=0.04)
-#     label2 = visual.TextStim(win, text="Move on to the real game", pos=(0.3, -0.1), color='black', height=0.04)
-
-#     mouse = event.Mouse()
-
-#     while True:
-#         button1.draw()
-#         button2.draw()
-#         label1.draw()
-#         label2.draw()
-#         stim.draw()
-#         win.flip()
-#         if mouse.isPressedIn(button1): # When practice is chosen again
-#             study.append({
-#                 "ID": "",
-#                 "TrialType":f"Instruction_{text_index}",
-#                 "BlockNum": "",
-#                 "AlienOrder": "",
-#                 "QuizResp": "",
-#                 "QuizFailedNum": "",
-#                 "TimeElapsed": experiment_clock.getTime(),
-#                 "RT": "",
-#                 "PRT": "",
-#                 "Galaxy": "",
-#                 "DecayRate": "",
-#                 "AlienIndex": "",
-#                 "GemValue": "",
-#                 "TimeInBlock": ""
-#             })
-#             # Show the practice sequence again and then when they travel show this same button text
-#             dig_instruction(gems=barrel_img)
-#             show_button_text("Now that you know how to dig for space treasure and travel to new planets, you can start exploring the universe!\n\nDo you want to play the practice game again or get started with the real game?")
-#             break
-#         elif mouse.isPressedIn(button2): # When moving to the main game
-#             study.append({
-#                 "ID": "",
-#                 "TrialType":f"Instruction_{text_index}",
-#                 "BlockNum": "",
-#                 "AlienOrder": "",
-#                 "QuizResp": "",
-#                 "QuizFailedNum": "",
-#                 "TimeElapsed": experiment_clock.getTime(),
-#                 "RT": "",
-#                 "PRT": "",
-#                 "Galaxy": "",
-#                 "DecayRate": "",
-#                 "AlienIndex": "",
-#                 "GemValue": "",
-#                 "TimeInBlock": ""
-#             })
-#             break # Continue to next function
-
 # Shows an image for some duration
 def show_image(img_path, duration=1.5):
     """Displays an image for a given duration"""
@@ -523,145 +557,9 @@ def show_stacked_images(img_paths = [], duration=3):
     win.flip()
     core.wait(duration)
 
-# Function for digging gems and the subseqent trials
-# def show_animation(images, frame_time=0.667,test=False,gem_img=hundred_img):
-#     """Displays an animation sequence by flipping through images."""
-#     global decay,gem,galaxy,study,experiment_clock,dig_index,first_planet,prt_clock
-
-#     for img in images: # Flips through img in images at speed frame_time
-#         stim = visual.ImageStim(win, image=img, size=(1.2,1.2))
-#         stim.draw()
-#         win.flip()
-#         core.wait(frame_time)
-#     stim = visual.ImageStim(win, image=gem_img, size=(1.2,1.2)) # After animation shows image with gems with img path gem_img
-#     stim.draw()
-#     win.flip()
-#     core.wait(1.5)
-#     if test == False: # Test is for the instruction digging trial, not practice nor main phase
-#         stim = visual.ImageStim(win, image=land_img, size=(1.2,1.2)) # After animation shows image with gems with img path gem_img
-#         stim.draw()
-#         response_clock = core.Clock() # for rt data collection
-#         if first_planet:
-#             prt_clock = core.Clock() # Turns on prt timer when the first visit to the planet occurs
-#         stim = visual.TextStim(win, text="Dig here or travel to a new planet?", color='black', height=0.07, pos=(0, 0.7), wrapWidth=config['params']['TEXTBOX_WIDTH'])
-#         stim.draw()
-#         win.flip()
-#         keys = event.waitKeys(maxWait=2,keyList= keyList,timeStamped = response_clock) # can only take a or l
-#         if keys:
-#             key,RT = keys[0] # RT used for data collection
-#             if keyList[0] in key: # Dig more
-#                 if decay: # practice trials do not have decay
-#                     first_planet= False # Switch first planet off for next trials
-#                     dig_index +=1
-#                     study.append({
-#                         "ID": "",
-#                         "TrialType":f"Dig_Trial_{dig_index}",
-#                         "BlockNum": "",
-#                         "AlienOrder": "",
-#                         "QuizResp": "",
-#                         "QuizFailedNum": "",
-#                         "TimeElapsed": experiment_clock.getTime(),
-#                         "RT": RT,
-#                         "PRT": "",
-#                         "Galaxy": "",
-#                         "DecayRate": "",
-#                         "AlienIndex": "",
-#                         "GemValue": gem, # Initial gem value set in block_loop
-#                         "TimeInBlock": ""
-#                     })
-#                     gem = round(decay*gem) # Adds decay to next gem value for following trial
-#                     gem_path = image_prefix + f"gems/{gem}.jpg"
-#                     dig_instruction(gems=gem_path) # Loops to new trial
-#                 else:
-#                     dig_instruction(gems=gem_img) # This is for practice trials since only shows barrel img
-#             if keyList[1] in key: # If they travel
-#                     if decay:
-#                         study.append({
-#                             "ID": "",
-#                             "TrialType":f"Travel_Trial",
-#                             "BlockNum": "",
-#                             "AlienOrder": "",
-#                             "QuizResp": "",
-#                             "QuizFailedNum": "",
-#                             "TimeElapsed": experiment_clock.getTime(),
-#                             "RT": RT,
-#                             "PRT": prt_clock.getTime(),
-#                             "Galaxy": "",
-#                             "DecayRate": "",
-#                             "AlienIndex": "",
-#                             "GemValue": gem,
-#                             "TimeInBlock": ""
-#                         })
-#                     else:
-#                         study.append({
-#                             "ID": "",
-#                             "TrialType":f"Practice_Trial",
-#                             "BlockNum": "",
-#                             "AlienOrder": "",
-#                             "QuizResp": "",
-#                             "QuizFailedNum": "",
-#                             "TimeElapsed": experiment_clock.getTime(),
-#                             "RT": RT,
-#                             "PRT": "",
-#                             "Galaxy": "",
-#                             "DecayRate": "",
-#                             "AlienIndex": "",
-#                             "GemValue": "",
-#                             "TimeInBlock": ""
-#                         })
-#                     travel_trial() # Travel animation function
-#         else:
-#             too_slow() # Run out of time
-#             study.append({
-#                 "ID": "",
-#                 "TrialType":f"Too_slow",
-#                 "BlockNum": "",
-#                 "AlienOrder": "",
-#                 "QuizResp": "",
-#                 "QuizFailedNum": "",
-#                 "TimeElapsed": experiment_clock.getTime(),
-#                 "RT": "NA",
-#                 "PRT": "",
-#                 "Galaxy": "",
-#                 "DecayRate": "",
-#                 "AlienIndex": "",
-#                 "GemValue": gem,
-#                 "TimeInBlock": ""
-#             })
-#             if decay: # If there is decay show the next gem value
-#                 gem = round(decay*gem)
-#                 gem_path = image_prefix + f"gems/{gem}.jpg"
-#                 dig_instruction(gems=gem_path)  
-#             else: # If not just show the barrel again
-#                 dig_instruction(gems=gem_img)
-#     else:
-#         prt_clock = core.Clock() # Meant to intiialize 
-#         study.append({
-#             "ID": "",
-#             "TrialType":f"Dig_Instruct",
-#             "BlockNum": "",
-#             "AlienOrder": "",
-#             "QuizResp": "",
-#             "QuizFailedNum": "",
-#             "TimeElapsed": experiment_clock.getTime(),
-#             "RT": "",
-#             "PRT": "",
-#             "Galaxy": "",
-#             "DecayRate": "",
-#             "AlienIndex": "",
-#             "GemValue": "",
-#             "TimeInBlock": ""
-#         })
-#         win.flip()
-#         core.wait(1)
-
 # Timeout image for 2 seconds
 def too_slow():
     show_image(timeout_img,duration=2)
-
-# Function where show animation is nested -- added for earlier versions but can look into removing
-# def dig_instruction(practice=False,gems=hundred_img):
-#     show_animation(dig_sequence, frame_time=0.667,test=practice,gem_img=gems)
 
 # Rocket travel trials
 def travel_trial():
@@ -776,58 +674,12 @@ def practice_pirates(text=pick_pirate,switch='win'):
         show_text(text=won_text,height=0.6,image_path=pirate)
     elif switch == 'nowin':
         show_text(text=loss_text,height=0.6,image_path=pirate_loss)
-
             
 # Where the main task is run
 
-
-def block_loop(blockNum):
-    """Main task loop divided into blocks"""
-    global gem,decay,alien_index,study,first_planet,block_time
-    first_trial = True # Initial switch for first_trial
-    timer = core.Clock() # Timer for each block
-    while timer.getTime() < block_length: # Loop runs for as long as the timer is under block_length
-        first_planet = True
-        if alien_index >= len(planets): # If they get through all the aliens it restarts
-            alien_index = 0
-        if first_trial:
-            get_galaxy(first=True) # Get first galaxy type
-        else:
-            get_galaxy() # Get galaxy types with 80/20 distribution
-        first_trial = False
-        # Initial decay rate and gem selection
-        decay = get_decay_rate(galaxy=galaxy)
-        gem = round(np.max([np.min([np.random.normal(100,5),135]),0]))
-        gem_path = image_prefix + f"gems/{gem}.jpg"
-        study.append({
-            "ID": "",
-            "TrialType":f"start_loop",
-            "BlockNum": blockNum,
-            "AlienOrder": "",
-            "QuizResp": "",
-            "QuizFailedNum": "",
-            "TimeElapsed": experiment_clock.getTime(),
-            "RT": "",
-            "PRT": "",
-            "Galaxy": galaxy,
-            "DecayRate": decay,
-            "AlienIndex": alien_index,
-            "GemValue": "",
-            "TimeInBlock": ""
-        })
-        show_image(img_path=planets[alien_index],duration=5) # Show the first alien welcome
-        alien_index += 1
-        
-    block_time = timer.getTime() # when timer goes above block_length it logs the time
-    write_study()
-    win.flip()
-    core.wait(1)
-
-
-curr_trial = 0
 def practice_pirate_loop(duration = 2,setting = 'desert'):
     """For choosing the pirate, getting the probe, and seeing if there is a reward"""
-    global curr_trial
+    global curr_prac_trial
     if setting == 'desert':
         location = desert_pirates
     elif setting == 'cavern':
@@ -843,44 +695,47 @@ def practice_pirate_loop(duration = 2,setting = 'desert'):
     if resp_key:
         key,RT = resp_key[0] # RT used for data collection
         if setting == 'desert':
+            set_img = desert_img
             if keyList[0] in key: # 1
                 pirateChoice = desert_red
-                pirateProbe = desert_red_remember[curr_trial]
-                pirateReward = desert_red_reward[curr_trial]
+                pirateProbe = desert_red_remember[curr_prac_trial]
+                pirateReward = desert_red_reward[curr_prac_trial]
             if keyList[1] in key: # 2
                 pirateChoice = desert_white
-                pirateProbe = desert_white_remember[curr_trial]
-                pirateReward = desert_white_reward[curr_trial]
+                pirateProbe = desert_white_remember[curr_prac_trial]
+                pirateReward = desert_white_reward[curr_prac_trial]
             if keyList[2] in key: # 3
                 pirateChoice = desert_black
-                pirateProbe = desert_black_remember[curr_trial]
-                pirateReward = desert_black_reward[curr_trial]
+                pirateProbe = desert_black_remember[curr_prac_trial]
+                pirateReward = desert_black_reward[curr_prac_trial]
         elif setting == 'cavern':
+            set_img = cavern_img
             if keyList[0] in key: # 1
                 pirateChoice = cavern_red
-                pirateProbe = cavern_red_remember[curr_trial-5]
-                pirateReward = cavern_red_reward[curr_trial-5]
+                pirateProbe = cavern_red_remember[curr_prac_trial-5]
+                pirateReward = cavern_red_reward[curr_prac_trial-5]
             if keyList[1] in key: # 2
                 pirateChoice = cavern_white
-                pirateProbe = cavern_white_remember[curr_trial-5]
-                pirateReward = cavern_white_reward[curr_trial-5]
+                pirateProbe = cavern_white_remember[curr_prac_trial-5]
+                pirateReward = cavern_white_reward[curr_prac_trial-5]
             if keyList[2] in key: # 3
                 pirateChoice = cavern_black
-                pirateProbe = cavern_black_remember[curr_trial-5]
-                pirateReward = cavern_black_reward[curr_trial-5]
+                pirateProbe = cavern_black_remember[curr_prac_trial-5]
+                pirateReward = cavern_black_reward[curr_prac_trial-5]
         show_stacked_images(img_paths=pirateChoice,duration=1)
-        show_stacked_images(img_paths=pirateProbe,duration=1)
+        show_stacked_images(img_paths=pirateProbe,duration=2)
         show_stacked_images(img_paths=pirateReward,duration=1)
-        curr_trial +=1
-        if curr_trial < 5:
+        show_stacked_images(img_paths=[deck,set_img],duration=1)
+        curr_prac_trial +=1
+        if curr_prac_trial < 5:
             practice_pirate_loop()
-        elif curr_trial >=5 and curr_trial < 10:
-            if curr_trial == 5:
+        elif curr_prac_trial >=5 and curr_prac_trial < 10:
+            if curr_prac_trial == 5:
                 show_stacked_images(desert_bye)
                 travel_trial()
                 show_stacked_images(cavern_welcome,duration=3)
             practice_pirate_loop(setting='cavern')
-        else:
+        else:  
             stim = visual.ImageStim(win, image=best_pirate,size=(1.2,1.2))
             stim.draw()
             win.flip()
@@ -894,9 +749,72 @@ def practice_pirate_loop(duration = 2,setting = 'desert'):
                     show_text("That's incorrect! Red beard was the best."+ space_bar)
                 if keyList[2] in bestkeys: # 3
                     show_text("That's incorrect! Red beard was the best."+ space_bar)
+
+            stim = visual.ImageStim(win, image=source_practice,size=(1.2,1.2))
+            stim.draw()
+            win.flip()
+            source_key = event.waitKeys(keyList=[keyList[0],keyList[1]])
+
+            if best_key:
+                sourcekey = source_key[0]
+                if keyList[0] in sourcekey: # 1
+                    show_text("That's incorrect! You saw this ship on the cavern island."+ space_bar)
+                if keyList[1] in sourcekey: # 2
+                    show_text("That's correct! You saw this ship on the cavern island." + space_bar)
+
     else:
         show_image(timeout_img,duration=2)
         practice_pirate_loop()
+
+def learn_phase_loop():
+    """For choosing the pirate, getting the probe, and seeing if there is a reward"""
+    global curr_trial
+    planet_shift_indx = [0,30,70,110,150,190] # 0 index where contexts shift
+    if curr_trial in planet_shift_indx:
+        show_stacked_images(stacked_planet_welcome[curr_trial],duration=3) # Show welcome on first visit
+    for img_path in stacked_all_pirates[curr_trial]: # Show all pirates and take responses
+        stim = visual.ImageStim(win, image=img_path,size=(1.2,1.2))
+        stim.draw()
+    response_clock = core.Clock()
+    win.flip()
+    resp_key = event.waitKeys(keyList=keyList,timeStamped=response_clock,maxWait=2)
+    
+    if resp_key:
+        key,RT = resp_key[0] # RT used for data collection
+        if keyList[0] in key: # 1
+            pirateChoice = stacked_red_pirate[curr_trial]
+            pirateProbe = stacked_red_remember[curr_trial]
+            pirateReward = stacked_red_reward[curr_trial]
+        if keyList[1] in key: # 2
+            pirateChoice = stacked_white_pirate[curr_trial]
+            pirateProbe = stacked_white_remember[curr_trial]
+            pirateReward = stacked_white_reward[curr_trial]
+        if keyList[2] in key: # 3
+            pirateChoice = stacked_black_pirate[curr_trial]
+            pirateProbe = stacked_black_remember[curr_trial]
+            pirateReward = stacked_black_reward[curr_trial]
+        show_stacked_images(img_paths=pirateChoice,duration=1)
+        show_stacked_images(img_paths=pirateProbe,duration=2)
+        show_stacked_images(img_paths=pirateReward,duration=1)
+        show_stacked_images(img_paths=stacked_island_nopirate[curr_trial],duration=1)
+        curr_trial +=1 # Advance trial
+        if curr_trial == first_block + (block_len * (num_blocks - 1)):
+            show_stacked_images(stacked_island_bye[curr_trial-1],duration=1.5)
+        elif curr_trial in planet_shift_indx:
+                show_stacked_images(stacked_island_bye[curr_trial-1],duration=1.5)
+                take_break()
+                travel_trial()
+                learn_phase_loop()
+        else:
+            learn_phase_loop()
+    else:
+        show_image(timeout_img,duration=2)
+        curr_trial -= 1
+        learn_phase_loop()
+
+def take_break():
+    """Breaks between islands"""
+    show_text(text="Time to take a quick break! You have 2 minutes to rest, but you can move on sooner if you'd like."+space_bar,duration=120)
 
 
 
@@ -937,7 +855,7 @@ show_text(welcome_txt)
 
 # show_text(probabilistic,image_path=tutorial_blue_pirate,height=0.5,keys=['1'])
 
-# # practice_blue_loop()
+# practice_blue_loop()
 
 # show_text(blue_beard_outcome,keys=['space'])
 
@@ -951,43 +869,24 @@ show_text(welcome_txt)
 
 # show_text(text=changepoint)
 
-# show_text(text=drift,height=0.5,image_path=contingency,img_pos=-0.4)
+show_text(text=drift,height=0.4,image_path=contingency,img_pos=-0.4)
 
 # show_text(text=summary)
 
-show_stacked_images(desert_welcome,duration=3)
+# show_stacked_images(desert_welcome,duration=3)
 
-practice_pirate_loop()
+# practice_pirate_loop()
 
-show_text(quiz_intro)
+# show_text(quiz_intro)
 
-run_quiz()
+# run_quiz()
 
-show_text("Good job! You’re now ready to move on to the real game! Remember this game will be difficult but don't get discouraged and try your best!" + space_bar)
+# show_text("Good job! You’re now ready to move on to the real game! Remember this game will be difficult but don't get discouraged and try your best!" + space_bar)
 
-# show_image(img_path=practice_alien,duration=5)
-# dig_instruction(gems=barrel_img)
+learn_phase_loop()
 
-# show_button_text(text="Now that you know how to dig for space treasure and travel to new planets, you can start exploring the universe!\n\nDo you want to play the practice game again or get started with the real game?")
-
-# block_loop(1)
-# rest_homebase()
-
-# block_loop(2)
-# rest_homebase()
-
-# block_loop(3)
-# rest_homebase()
-
-# block_loop(4)
-# rest_homebase()
-
-# block_loop(5)
-
-# #Save data
-# save_data(participant_id, study)
-
-# show_text("Thank you for participating! Press SPACE to exit.")
+# save_data(participant_id,study)
+show_text("You are all done with the first part of the study! Thank you for participating.\n\n\n\nPress the spacebar to exit")
 
 win.close()
 core.quit()

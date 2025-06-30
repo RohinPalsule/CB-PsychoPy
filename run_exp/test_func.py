@@ -193,19 +193,146 @@ import matplotlib.pyplot as plt
 # Plotting
 plt.figure(figsize=(12, 6))
 
-# Plot each bandit's payout trajectory
-plt.plot(payout[0][0:], label='Bandit 1', color='green')
-plt.plot(payout[1][0:], label='Bandit 2', color='red')
-plt.plot(payout[2][0:], label='Bandit 3', color='blue')
-for d in [30, 70, 110, 150, 190]:
-    print(d)
-    plt.axvspan(d,d+10, color='pink', alpha=0.3)
-    plt.axvline(d,color='black')
-# Formatting
-plt.xlabel('Trial')
-plt.ylabel('Reward Value')
-plt.title('Bandit Payouts Over Trials')
-plt.legend()
-plt.grid(True)
-plt.tight_layout()
-plt.show()
+# # Plot each bandit's payout trajectory
+# plt.plot(payout[0][0:], label='Bandit 1', color='green')
+# plt.plot(payout[1][0:], label='Bandit 2', color='red')
+# plt.plot(payout[2][0:], label='Bandit 3', color='blue')
+# for d in [30, 70, 110, 150, 190]:
+#     print(d)
+#     plt.axvspan(d,d+10, color='pink', alpha=0.3)
+#     plt.axvline(d,color='black')
+# # Formatting
+# plt.xlabel('Trial')
+# plt.ylabel('Reward Value')
+# plt.title('Bandit Payouts Over Trials')
+# plt.legend()
+# plt.grid(True)
+# plt.tight_layout()
+# plt.show()
+
+probabilities = {
+    1: payout[0] * 0.01,
+    2: payout[1] * 0.01,
+    3: payout[2] * 0.01
+}
+
+# Plotting
+# plt.figure(figsize=(12, 6))
+
+# # Plot each bandit's payout trajectory
+# plt.plot(probabilities[1][0:210], label='Bandit 1', color='green')
+# plt.plot(probabilities[2][0:210], label='Bandit 2', color='red')
+# plt.plot(probabilities[3][0:210], label='Bandit 3', color='blue')
+# for d in [30, 70, 110, 150, 190]:
+#     print(d)
+#     plt.axvspan(d,d+10, color='pink', alpha=0.3)
+#     plt.axvline(d,color='black')
+# # Formatting
+# plt.xlabel('Trial')
+# plt.ylabel('Probability for Reward')
+# plt.title('Bandit Payout Probabilities Over Trials')
+# plt.legend()
+# plt.grid(True)
+# plt.tight_layout()
+# plt.show()
+import random
+valid_probe_images = []
+invalid_probe_images = []
+for i in range(1,231): # 230 trials (30 trials first block + 40 trials * 5 other blocks)
+    if i < 10:   
+        valid_probe_images.append(image_prefix + f"probes-0{i}.png")
+    else:
+        valid_probe_images.append(image_prefix+ f"probes-{i}.png")
+for i in range(231,256): # 25 trials (wrong probe trials during testing)
+    invalid_probe_images.append(image_prefix +f"probes-{i}.png")
+
+random.shuffle(valid_probe_images)
+random.shuffle(invalid_probe_images)
+print(len(probabilities[1]))
+
+
+
+
+# Valid probes (seen in task) and Invalid (foils during memory phase)
+valid_probe_images = []
+invalid_probe_images = []
+for i in range(1,231): # 230 trials (30 trials first block + 40 trials * 5 other blocks)
+    if i < 10:   
+        valid_probe_images.append(image_prefix + f"probes-0{i}.png")
+    else:
+        valid_probe_images.append(image_prefix + f"probes-{i}.png")
+for i in range(231,256): # 25 trials (wrong probe trials during testing)
+    invalid_probe_images.append(image_prefix + f"probes-{i}.png")
+
+random.shuffle(valid_probe_images)
+random.shuffle(invalid_probe_images)
+
+# Context-based trial order
+first_block = 30
+contexts = [image_prefix + "contexts/context_coast.png",
+            image_prefix + "contexts/context_countryside.png",
+            image_prefix + "contexts/context_mountain.png",
+            image_prefix + "contexts/context_forest.png",
+            image_prefix + "contexts/context_highway.png",
+            image_prefix + "contexts/context_city.png"]
+random.shuffle(contexts)
+
+stacked_all_pirates = []
+stacked_red_remember = []
+stacked_red_reward = []
+stacked_white_remember = []
+stacked_white_reward = []
+stacked_black_remember = []
+stacked_black_reward = []
+context_labels = []
+
+for context_idx,context in enumerate(contexts):
+    if context_idx == 0:
+        for trial_idx in range(first_block):
+            stacked_all_pirates.append([deck,context,all_pirates])
+            stacked_red_remember.append([deck,context,red_pirate,probe_ship,valid_probe_images[trial_idx]])
+            stacked_red_reward.append([deck,context,red_pirate,probe_ship,valid_probe_images[trial_idx],probabilities[1][trial_idx]])
+            stacked_white_remember.append([deck,context,white_pirate,probe_ship,valid_probe_images[trial_idx]])
+            stacked_white_reward.append([deck,context,white_pirate,probe_ship,valid_probe_images[trial_idx],probabilities[2][trial_idx]])
+            stacked_black_remember.append([deck,context,black_pirate,probe_ship,valid_probe_images[trial_idx]])
+            stacked_black_reward.append([deck,context,black_pirate,probe_ship,valid_probe_images[trial_idx],probabilities[3][trial_idx]])
+            context_labels.append(context.split("contexts/context_")[-1].split(".png")[0])
+    else:
+        for trial_idx in range(block_len):
+            stacked_all_pirates.append([deck,context,all_pirates])
+            stacked_red_remember.append([deck,context,red_pirate,probe_ship,valid_probe_images[trial_idx]])
+            stacked_red_reward.append([deck,context,red_pirate,probe_ship,valid_probe_images[trial_idx],probabilities[1][trial_idx]])
+            stacked_white_remember.append([deck,context,white_pirate,probe_ship,valid_probe_images[trial_idx]])
+            stacked_white_reward.append([deck,context,white_pirate,probe_ship,valid_probe_images[trial_idx],probabilities[2][trial_idx]])
+            stacked_black_remember.append([deck,context,black_pirate,probe_ship,valid_probe_images[trial_idx]])
+            stacked_black_reward.append([deck,context,black_pirate,probe_ship,valid_probe_images[trial_idx],probabilities[3][trial_idx]])
+            context_labels.append(context.split("contexts/context_")[-1].split(".png")[0])
+
+
+
+contexts = [image_prefix + "contexts/context_coast.png",
+            image_prefix + "contexts/context_countryside.png",
+            image_prefix + "contexts/context_mountain.png",
+            image_prefix + "contexts/context_forest.png",
+            image_prefix + "contexts/context_highway.png",
+            image_prefix + "contexts/context_city.png"]
+
+welcomeArray = [image_prefix + "travel/welcome_coast.png",
+                image_prefix + "travel/welcome_meadow.png",
+                image_prefix + "travel/welcome_mountain.png",
+                image_prefix + "travel/welcome_forest.png",
+                image_prefix + "travel/welcome_road.png",
+                image_prefix + "travel/welcome_city.png"]
+
+indices = list(range(len(contexts)))
+random.shuffle(indices)
+
+contexts = [contexts[i] for i in indices]
+welcomeArray = [welcomeArray[i] for i in indices]
+
+ifReward = {key: np.random.binomial(1, prob) for key, prob in probabilities.items()}
+
+reward_imgs = {
+    key: np.where(arr == 1, 'reward', 'no_reward')
+    for key, arr in ifReward.items()
+}

@@ -336,3 +336,4 @@ reward_imgs = {
     key: np.where(arr == 1, 'reward', 'no_reward')
     for key, arr in ifReward.items()
 }
+print(ifReward[3].tolist())

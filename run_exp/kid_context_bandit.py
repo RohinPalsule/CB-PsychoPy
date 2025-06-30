@@ -186,22 +186,21 @@ q4 = "You should remember the island where a pirate robbed a ship.\n\n\n\nPress 
 import numpy as np
 
 # ----- Constants -----
-num_bandits = 3
-first_block = 30
-block_len = 40
-num_blocks = 6
+num_bandits = config['params']['num_bandits']
+first_block = config['params']['first_block']
+block_len = config['params']['block_len']
+num_blocks = config['params']['num_blocks']
 num_trials = block_len * num_blocks * 2
-init_payoff = [60, 30, 10]
+init_payoff = config['params']['init_payoff']
 decayTheta = init_payoff.copy()
-payoff_bounds = [5, 95]
-decay_lambda = 0.6
-drift_noise = 8
-
-rotation_trials = [40, 80, 120, 160, 200, 240, 280, 320, 360, 400, 440]
-deterministic_trials = [30, 70, 110, 150, 190]
+payoff_bounds = config['params']['payoff_bounds']
+decay_lambda = config['params']['decay_lambda']
+drift_noise = config['params']['drift_noise']
+rotation_trials = config['params']['rotation_trials']
+deterministic_trials = config['params']['deterministic_trials']
 
 # Add bumped deterministic trials
-ctx_bump = 2
+ctx_bump = config['params']['ctx_bump']
 for i in range(len(deterministic_trials)):
     for j in range(1, ctx_bump):
         trial_to_add = deterministic_trials[i] + j

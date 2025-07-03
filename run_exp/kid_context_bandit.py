@@ -149,10 +149,11 @@ for i,probe in enumerate(practice_probes_cavern):
 # Init trials
 curr_trial = 0
 curr_prac_trial = 0
+probed_mem_trial = 0
 
 # Instruction init
 space_bar = "\n\n[Press the space bar to continue]"
-welcome_txt = "Welcome! This is the first part of the study. It will last ~30 minutes. In part 1 and part 2 of the study, you are the head captain of a pirate ship traveling around the world to different islands. You will play a few different games throughout these two parts. Here is an overview of them:\n\nPart 1 (today)\n\n1. Instructions, practice game, and quiz\n\n2. Pick a pirate game on 6 different islands\n\nPart 2 (tomorrow)\n\n3. Pick a pirate game and memory game\n\n4. Where did you see this ship? " + space_bar
+welcome_txt = "Welcome! This is the first part of the study. It will last ~30 minutes. In part 1 and part 2 of the study (total 1 hour), you are the head captain of a pirate ship traveling around the world to different islands. You will play a few different games throughout these two parts. Here is an overview of them:\n\nPart 1 \n\n1. Instructions, practice game, and quiz\n\n2. Pick a pirate game on 6 different islands\n\nPart 2 \n\n3. Pick a pirate game and memory game\n\n4. Where did you see this ship? " + space_bar
 different_places = "Today, you’ll visit these 6 islands on your journey. You'll be able to see these islands from your ship."+ space_bar
 goal_of_game_1 = " The pirates on your ship will rob other ships as they leave the island. These ships have just sold their goods to the islanders, so they will be filled with lots and lots of gold" + space_bar
 
@@ -181,6 +182,31 @@ q1 = "You win bonus money by collecting gold coins.\n\n\n\nPress 1 for true and 
 q2 = "The pirate who is the best at robbing ships when you first arrive on the island will definitely still be the best when you leave the island.\n\n\n\nPress 1 for true and press 2 for false."
 q3 = "The pirate who is the best at robbing ships on the first island will be the best on every other island.\n\n\n\nPress 1 for true and press 2 for false."
 q4 = "You should remember the island where a pirate robbed a ship.\n\n\n\nPress 1 for true and press 2 for false."
+
+#/////////////////////////////////////////////////////////////////////////
+#images day2
+example_recog = image_prefix + "tutorial/example_recog_trial.png"
+memory_reward = image_prefix + "tutorial/reward_small.png"
+# text
+goal_summary = "In this part, like before, you get to pick which pirate you want to rob the next ship.\n\nIf the pirate is successful in robbing a ship, you get gold coins that look like this:"
+goal_summary2 = "If they were not successful in robbing the ship, then you will get no gold coins and you'll see a big red x like this:"
+how_to_pick_summary = "Also, just like before, you will use the 1,2,3 keys on your keyboard to pick a pirate. Press '1' to choose red beard, '2' to choose white beard, and '3' to choose black beard. You only have 3 seconds to pick a pirate, so please make a choice quickly!" + space_bar
+
+#//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+final_place = "You’ve arrived at the final island of your journey! Unfortunately, it’s very foggy out, so you won’t be able to see it in the distance like the other islands you've visited.\n\nYou’ll still be deciding which pirate you want to rob a ship like before. However, because of the fog, you also won’t be able to see the ship.\n\nThis means you do not have to remember the ships you rob on this island.\n\nUnlike before, you won't be visiting multiple islands today. You will stay on this island for the entire game. This part will last ~30 minutes." + space_bar
+recognition_1 = "Sometimes you’ll be shown a ship, and you will be asked if you saw this ship on a past island. Here is an example of what you will see." + space_bar
+recognition_2 = "You will press the 5, 6, 7, 8 keys on your keyboard to respond.\n\nIf you are sure you saw the ship, press 5 on your keyboard.\n\nIf you think you saw it before but aren't sure, then press 6.\n\nIf you think you have not seen it before but aren't sure, then press 7.\n\nIf you are sure you did not see the ship before, then press 8." + space_bar
+recognition_3 = " If you remember correctly, then you’ll get a gold coin like this:"
+recognition_3b = "If you do not remember correctly, then you'll see a red x like this:"
+recognition_3c = "Importantly, when you are shown a ship, take the time to remind yourself which island you saw it on. This will help you in the next part of the study." + space_bar
+begin_final = "Let's go over the important points again. Your job is to:\n\n\n\n1. Pick the pirate who is best at robbing ships and will bring you back gold coins.\n\n2. Correctly remember whether or not you saw a ship before. If you did see the ship before, remind yourself on which island you saw it.\n\n"+space_bar
+
+source_memory = " Ok, you’re almost done! In this part, you’ll see a ship you saw yesterday, and you will have to pick the island on which you saw it using the keys 1, 2, 3, 4, 5, 6 on your keyboard. The number above each picture tells you which key to press to pick that island. Every time you pick the right island you’ll win some more bonus money, so try your best to remember! <img src='run_exp/static/images/tutorial/example_source_memory.png' height='500'>"
+pick_best_pirate = " Ok, this is your final game of the day. You’ll be shown an island, and you’ll have to pick the pirate you thought was the best at robbing ships on that island. You will use the 1, 2, 3 keys on your keyboard. Just like before, press '1' to choose red beard, '2' to choose white beard, and '3' to choose black beard. Once you pick a pirate, a gold box will surround your choice. Then, you’ll have to pick the pirate you thought was the second best at robbing ships on that island. Once you pick a pirate, a silver box will surround your choice. Then, you’ll move on to the next island.  <img src='run_exp/static/images/tutorial/example_pick_best.png' height='500'>"
+#/////////////////////////////////////////////////////////////////////////
+
+
 
 # Reward
 import numpy as np
@@ -286,6 +312,49 @@ for i in range(231,256): # 25 trials (wrong probe trials during testing)
 random.shuffle(valid_probe_images)
 random.shuffle(invalid_probe_images)
 
+
+sample_window = 10
+mean_ct = 5
+min_ct = 2
+max_ct = 8
+num_probes = sample_window * (num_blocks-1)
+num_invalid_probes = np.round(num_probes/5)
+num_probes = int(num_probes + num_invalid_probes)
+# Step 1: Generate exponentially-distributed choice_blocks
+log_rand = np.log(np.random.rand(num_probes))
+log_rand_div_mean_ct = log_rand / (1 / mean_ct)
+choice_blocks = np.ceil(log_rand_div_mean_ct) * -1 + min_ct
+choice_blocks = np.clip(choice_blocks, min_ct, max_ct).astype(int)
+
+# Step 2: Adjust until sum == num_trials/2 and all values are within bounds
+while (choice_blocks.sum() != num_trials // 2 or
+       np.any(choice_blocks < min_ct) or
+       np.any(choice_blocks > max_ct)):
+
+    # Random index to modify
+    ind = np.random.randint(0, num_probes)
+
+    # Increase or decrease based on current sum
+    delta = int(np.sign(choice_blocks.sum() - (num_trials // 2)))
+    choice_blocks[ind] -= delta
+
+    # Clamp again
+    choice_blocks = np.clip(choice_blocks, min_ct, max_ct)
+
+# Step 3: Subtract 1 from each (to leave space for a mem_trial) and add 10 to first
+choice_blocks = choice_blocks - 1
+choice_blocks[0] += 10
+
+# Step 4: Compute memory probe trial indices
+block_sizes = choice_blocks + 1
+cumsum_blocks = np.cumsum(block_sizes)
+mem_probe_trials = cumsum_blocks + (num_trials // 2)  # shift into 2nd half
+mem_probe_trials = mem_probe_trials - 1  # zero-indexing
+
+# Step 5: Compute choice trials (set difference)
+all_trials = np.arange(num_trials)
+choice_trials = np.setdiff1d(all_trials, mem_probe_trials)
+    
 # Context-based trial order
 
 contexts = [image_prefix + "contexts/context_coast.png",
@@ -302,12 +371,16 @@ welcomeArray = [image_prefix + "travel/welcome_coast.png",
                 image_prefix + "travel/welcome_road.png",
                 image_prefix + "travel/welcome_city.png"]
 
+# Randomizing context and welcome messages to be the same
 indices = list(range(len(contexts)))
 random.shuffle(indices)
+
+response_check = []
 
 contexts = [contexts[i] for i in indices]
 welcomeArray = [welcomeArray[i] for i in indices]
 
+# Init main phase image stacks
 stacked_all_pirates = []
 stacked_red_remember = []
 stacked_red_reward = []
@@ -324,7 +397,7 @@ stacked_island_bye = []
 stacked_island_nopirate = []
 
 for context_idx,context in enumerate(contexts):
-    if context_idx == 0:
+    if context_idx == 0: # First context is 30 trials
         for trial_idx in range(first_block):
             stacked_planet_welcome.append([deck,context,ahoy,welcomeArray[context_idx]])
             stacked_island_nopirate.append([deck,context])
@@ -341,7 +414,7 @@ for context_idx,context in enumerate(contexts):
             stacked_island_bye.append([deck,context,bye_island])
             context_labels.append(context.split("contexts/context_")[-1].split(".png")[0])
     else:
-        for trial_idx in range(block_len):
+        for trial_idx in range(block_len): # Rest of the contexts are 40 trials
             stacked_planet_welcome.append([deck,context,ahoy,welcomeArray[context_idx]])
             stacked_island_nopirate.append([deck,context])
             stacked_all_pirates.append([deck,context,all_pirates])
@@ -357,23 +430,46 @@ for context_idx,context in enumerate(contexts):
             stacked_island_bye.append([deck,context,bye_island])
             context_labels.append(context.split("contexts/context_")[-1].split(".png")[0])
 
-# Sequences
-ship_sequence = [image_prefix + r for r in config["ship_sequence"]]
 
-# Randomized planets
-planet_prefix = np.random.choice(np.arange(1,121), 120, replace=False)
-planets = [image_prefix + f"aliens/alien_planet-{planet}.jpg" for planet in planet_prefix]
-gem = 0
-decay = None
-alien_index = 0
-prt_clock = core.Clock() # Initialized prt timer
+# Part 2 stacks
+
+stacked_seven_room = []
+context_seven = image_prefix + "contexts/context_blank.png"
+
+stacked_seven_red = []
+stacked_seven_white = []
+stacked_seven_black = []
+
+stacked_seven_red_reward = []
+stacked_seven_white_reward = []
+stacked_seven_black_reward = []
+stacked_seven_room_pirates = []
+pt2_index = first_block + ((num_blocks-1) * block_len)
+
+
+for i in range(230,num_trials):
+    stacked_seven_room.append([deck,context_seven])
+    stacked_seven_room_pirates.append([deck,context_seven,all_pirates])
+    stacked_seven_red.append([deck,context_seven,red_pirate])
+    stacked_seven_white.append([deck,context_seven,white_pirate])
+    stacked_seven_black.append([deck,context_seven,black_pirate])
+    stacked_seven_red_reward.append([deck,context_seven,red_pirate,reward_imgs[1][i]])
+    stacked_seven_white_reward.append([deck,context_seven,white_pirate,reward_imgs[2][i]])
+    stacked_seven_black_reward.append([deck,context_seven,black_pirate,reward_imgs[3][i]])
+
+recog_question = image_prefix + "miscellaneous/probe_recog.png"
+
+# Sequences
+ship_sequence = [image_prefix + r for r in config["ship_sequence"]] # For ship travelling between contexts
+
+# Init data collections
 block_time = 0
 text_index = 0
 failedNum = 0
-index = 0
-first_planet = True
 
+# Init keyboard list from yaml
 keyList = [config['params']['BUTTON_1'],config['params']['BUTTON_2'],config['params']['BUTTON_3']]
+recogKeyList = [config['params']['BUTTON_5'],config['params']['BUTTON_6'],config['params']['BUTTON_7'],config['params']['BUTTON_8']]
 
 if len(sys.argv) < 2: # Call participant ID in terminal
     print("Error: No participant ID provided.")
@@ -383,6 +479,7 @@ if len(sys.argv) < 2: # Call participant ID in terminal
 # Get participant ID from command-line argument
 participant_id = sys.argv[1]
 
+# Init data var
 study = []
 
 # For study.yaml output
@@ -392,7 +489,9 @@ def study_filename(subject_id_str):
         return 'study' + extension
     return 'study' + "." + str(subject_id_str) + extension
 
+# Updates to study.yaml
 def write_study():
+    """Writes study.yaml file with data output var"""
     if not participant_id:
         raise Exception("Shouldn't write to original study file! Please provide a valid subject ID.")
     with open(study_filename(participant_id), 'w') as file:
@@ -406,8 +505,8 @@ study.append({
     "ID": participant_id,
     "TrialType":f"InitializeStudy",
     "BlockNum": "",
-    "contextOrder": context_labels,
-    "reward_rate_red":probabilities[1].tolist(),
+    "contextOrder": context_labels, # List of context orders
+    "reward_rate_red":probabilities[1].tolist(), # List of reward rates for red pirate and below is white and black
     "reward_rate_white":probabilities[2].tolist(),
     "reward_rate_black":probabilities[3].tolist(),
     "probe_order": valid_probe_images,
@@ -425,60 +524,9 @@ study.append({
     "TimeInBlock": "",
 })
 # init in case exp breaks
-write_study()
-# For practice quiz
-questions = [
-    "What affects the amount of bonus money you will earn?",
-    "The length of this experiment",
-    "You get to stay at home base as long as you like."
-]
+write_study()  
 
-choices = [
-    ["The number of planets you visit", "How long you stay at home base", "The number of gems you collect"],
-    ["Depends on how many planets you've visited", "Is fixed", "Depends on how many gems you've collected"],
-    ["True", "False"]
-]
-
-correct_answers = ["The number of gems you collect", "Is fixed", "False"]
-
-# For decay rate
-def rbeta(alpha, beta):
-    """Generates a random number from a Beta distribution."""
-    return np.random.beta(alpha, beta)
-
-# Takes galaxy type to know which distribution to create (poor, neutral, rich)
-def get_decay_rate(galaxy):
-    """Returns a decay rate sampled from a Beta distribution based on the galaxy type."""
-    galaxy_distributions = {
-        0: (13, 51),  # Rich planet
-        1: (50, 50),  # Neutral planet
-        2: (50, 12)   # Poor planet
-    }
-    
-    if galaxy in galaxy_distributions:
-        alpha, beta = galaxy_distributions[galaxy]
-        return rbeta(alpha, beta)
-    else:
-        raise ValueError("Galaxy index out of range. Must be 0, 1, or 2.")
-
-
-galaxy = None # Galaxy is initialized later and can randomly start between planet types
-
-# If first is true it randomly chooses a planet type but if not it uses the 80% stay 20% switch
-def get_galaxy(first=False):
-    global galaxy
-    if first is True:
-        galaxy = np.random.randint(0,3)
-    else:
-        percentNum = np.random.randint(1,11)
-        if percentNum > 8:
-            newGalaxy = galaxy
-            while newGalaxy == galaxy:
-                newGalaxy = np.random.randint(0,3)
-            galaxy = newGalaxy
-        
-
-def show_text(text, image_path=None,x=1,y=1,height=0,img_pos = -0.3,text_height=config['params']['FONT_SIZE'],keys=['space']):
+def show_text(text, image_path=None,x=1,y=1,height=0,img_pos = -0.3,text_height=config['params']['FONT_SIZE'],keys=['space'],duration=0):
     """Displays a text message either until a key is pressed or for a specified duration (Default unlimited duration)"""
     global text_index,study,experiment_clock
     text_index += 1 # Used for trial data descriptions
@@ -493,7 +541,14 @@ def show_text(text, image_path=None,x=1,y=1,height=0,img_pos = -0.3,text_height=
 
     win.flip() # Resets screen
     # Only keys taken in exp (need to change to specify which key to use)
-    event.waitKeys(keyList=keys)
+    if duration > 0:
+        timer = core.Clock()
+        while timer.getTime() < duration:
+            keys = event.getKeys(keyList=["space"])
+            if "space" in keys:
+                break 
+    else:
+        event.waitKeys(keyList=keys)
     study.append({
         "ID": "",
         "TrialType":f"Instruction_{text_index}",
@@ -514,6 +569,7 @@ def show_text(text, image_path=None,x=1,y=1,height=0,img_pos = -0.3,text_height=
         "choice":"",
         "probe":"",
         "reward":"",
+        "confidence":"",
         "TimeInBlock": "",
     })
 
@@ -555,6 +611,7 @@ def show_multi_img_text(texts=[], image_paths=None,x=1,y=1,heights=[],img_pos=[]
         "choice":"",
         "probe":"",
         "reward":"",
+        "confidence":"",
         "TimeInBlock": "",
     })
 # Shows an image for some duration
@@ -596,6 +653,7 @@ def too_slow():
         "choice":"",
         "probe":"",
         "reward":"",
+        "confidence":"",
         "TimeInBlock": "",
     })
 
@@ -629,6 +687,7 @@ def travel_trial():
         "choice":"",
         "probe":"",
         "reward":"",
+        "confidence":"",
         "TimeInBlock": "",
     })
     win.flip()
@@ -699,6 +758,7 @@ def run_quiz():
             "choice":"",
             "probe":"",
             "reward":"",
+            "confidence":"",
             "TimeInBlock": "",
         })
         pass
@@ -821,6 +881,7 @@ def practice_pirate_loop(duration = 2,setting = 'desert'):
             "choice":"",
             "probe": probeList[trial_num],
             "reward":rewards[int(key)][trial_num],
+            "confidence":"",
             "TimeInBlock": "",
         })
         curr_prac_trial +=1
@@ -869,6 +930,7 @@ def practice_pirate_loop(duration = 2,setting = 'desert'):
                 "choice":"",
                 "probe": "",
                 "reward":"",
+                "confidence":"",
                 "TimeInBlock": "",
             })
             stim = visual.ImageStim(win, image=source_practice,size=(1.2,1.2))
@@ -904,6 +966,7 @@ def practice_pirate_loop(duration = 2,setting = 'desert'):
                 "choice":"",
                 "probe": "",
                 "reward":"",
+                "confidence":"",
                 "TimeInBlock": "",
             })
     else:
@@ -929,6 +992,7 @@ def practice_pirate_loop(duration = 2,setting = 'desert'):
                 "choice":"",
                 "probe": "",
                 "reward":"",
+                "confidence":"",
                 "TimeInBlock": "",
             })
 
@@ -948,6 +1012,7 @@ def learn_phase_loop():
     
     if resp_key:
         key,RT = resp_key[0] # RT used for data collection
+        response_check.append(1)
         if keyList[0] in key: # 1
             choice = 'red_pirate'
             pirateChoice = stacked_red_pirate[curr_trial]
@@ -987,11 +1052,13 @@ def learn_phase_loop():
             "choice":choice,
             "probe":valid_probe_images[curr_trial],
             "reward":ifReward[int(key)][curr_trial],
+            "confidence":"",
             "TimeInBlock": island_clock.getTime(),
         })
         curr_trial +=1 # Advance trial
         if curr_trial == first_block + (block_len * (num_blocks - 1)):
             show_stacked_images(stacked_island_bye[curr_trial-1],duration=1.5)
+            init_responses()
         elif curr_trial in island_shift_indx:
                 show_stacked_images(stacked_island_bye[curr_trial-1],duration=1.5)
                 take_break()
@@ -1000,6 +1067,7 @@ def learn_phase_loop():
         else:
             learn_phase_loop()
     else:
+        response_check.append(0)
         show_image(timeout_img,duration=2)
         study.append({
                 "ID": "",
@@ -1021,6 +1089,7 @@ def learn_phase_loop():
                 "choice":"",
                 "probe": "",
                 "reward":"",
+                "confidence":"",
                 "TimeInBlock": "",
             })
         learn_phase_loop()
@@ -1030,28 +1099,209 @@ def take_break():
     global island_clock
     show_text(text="Time to take a quick break! You have 2 minutes to rest, but you can move on sooner if you'd like."+space_bar,duration=120)
     study.append({
-                "ID": "",
-                "TrialType":f"take_break",
-                "BlockNum": "",
-                "contextOrder": "",
-                "reward_rate_red":"",
-                "reward_rate_white":"",
-                "reward_rate_black":"",
-                "probe_order": "",
-                "QuizFailedNum": "",
-                "TimeElapsed": experiment_clock.getTime(),
-                "key_press": "",
-                "RT": "",
-                "context": "",
-                "reward_prob_red":"",
-                "reward_prob_white":"",
-                "reward_prob_black":"",
-                "choice":"",
-                "probe": "",
-                "reward":"",
-                "TimeInBlock": island_clock.getTime(),
-            })
+        "ID": "",
+        "TrialType":f"take_break",
+        "BlockNum": "",
+        "contextOrder": "",
+        "reward_rate_red":"",
+        "reward_rate_white":"",
+        "reward_rate_black":"",
+        "probe_order": "",
+        "QuizFailedNum": "",
+        "TimeElapsed": experiment_clock.getTime(),
+        "key_press": "",
+        "RT": "",
+        "context": "",
+        "reward_prob_red":"",
+        "reward_prob_white":"",
+        "reward_prob_black":"",
+        "choice":"",
+        "probe": "",
+        "reward":"",
+        "confidence":"",
+        "TimeInBlock": island_clock.getTime(),
+    })
+response_sorted = []
+memory_probes = []
+final_memory_probes = []
+probed_context = []
+final_probed_context = []
+old_probe_list = []
+new_probe_list = []
+def init_responses():
+    global response_sorted,memory_probes,final_memory_probes,probed_context,final_probed_context,old_probe_list,new_probe_list
+    context_num = ["2","3","4","5","6"]
+    #Comment line below out
+    response_check = np.random.randint(1,2,480)
+    for i,t in enumerate([30, 70, 110, 150, 190]):
+        for added_trials in range(0,10):
+            response_sorted.append(response_check[t+added_trials])
+            memory_probes.append(valid_probe_images[t+added_trials])
+            probed_context.append(context_num[i])
+    for i,probe in enumerate(memory_probes):
+        if response_sorted[i]==1:
+            final_memory_probes.append(probe)
+            final_probed_context.append(probed_context[i])
+    old_probe_list = final_memory_probes
+    invalid_idx = 0
+    while final_memory_probes != 60:
+        new_probe_list.append(invalid_probe_images[invalid_idx])
+        final_memory_probes.append(invalid_probe_images[invalid_idx]) # Add 10 random new shuffled imgs and then any leftover if trials were skipped
+        final_probed_context.append("NA") # Not tested
+        invalid_idx +=1
+        if invalid_idx == 24: # In case they need more than 15 extra images (should not happen)
+            break
 
+    mem_idx = list(range(len(final_memory_probes)))
+    random.shuffle(mem_idx)
+
+    final_memory_probes = [final_memory_probes[i] for i in mem_idx]
+    final_probed_context = [final_probed_context[i] for i in mem_idx]
+
+    for i in range(len(final_memory_probes)):
+        stacked_recog.append([recog_question,probe_ship,final_memory_probes[i]])
+
+stacked_recog = []
+
+def pt2_memory_probes(choice_blocks=choice_blocks):
+    """Running the seventh room and intermittent memory trials"""
+    global pt2_index,study
+    for block in choice_blocks:
+        for trial in range(block):
+            for img_path in stacked_seven_room_pirates[pt2_index-230]: # Show all pirates and take responses
+                stim = visual.ImageStim(win, image=img_path,size=(1.2,1.2))
+                stim.draw()
+            response_clock = core.Clock()
+            island_clock = core.Clock()
+            win.flip()
+            resp_key = event.waitKeys(keyList=keyList,timeStamped=response_clock,maxWait=2)
+            
+            if resp_key:
+                key,RT = resp_key[0] # RT used for data collection
+                if keyList[0] in key: # 1
+                    choice = 'red_pirate'
+                    pirateChoice = stacked_seven_red[pt2_index-230]
+                    pirateReward = stacked_seven_red_reward[pt2_index-230]
+                if keyList[1] in key: # 2
+                    choice = 'white_pirate'
+                    pirateChoice = stacked_seven_white[pt2_index-230]
+                    pirateReward = stacked_seven_white_reward[pt2_index-230]
+                if keyList[2] in key: # 3
+                    choice = 'black_pirate'
+                    pirateChoice = stacked_seven_black[pt2_index-230]
+                    pirateReward = stacked_seven_black_reward[pt2_index-230]
+                if pt2_index < num_trials:
+                    show_stacked_images(img_paths=pirateChoice,duration=1)
+                    show_stacked_images(img_paths=pirateReward,duration=1)
+                    show_stacked_images(img_paths=stacked_seven_room[pt2_index-230],duration=1)
+                    pt2_index +=1
+                    study.append({
+                        "ID": "",
+                        "TrialType":f"pirate_{pt2_index+1}",
+                        "BlockNum": "",
+                        "contextOrder": "",
+                        "reward_rate_red":"",
+                        "reward_rate_white":"",
+                        "reward_rate_black":"",
+                        "probe_order": "",
+                        "QuizFailedNum": "",
+                        "TimeElapsed": experiment_clock.getTime(),
+                        "key_press": key,
+                        "RT": RT,
+                        "context": "blank",
+                        "reward_prob_red":probabilities[1][pt2_index],
+                        "reward_prob_white":probabilities[2][pt2_index],
+                        "reward_prob_black":probabilities[3][pt2_index],
+                        "choice":choice,
+                        "probe":"",
+                        "reward":ifReward[int(key)][pt2_index],
+                        "confidence":"",
+                        "TimeInBlock": island_clock.getTime(),
+                    })
+                else: pass
+            else:
+                too_slow()
+        get_memory_probe()
+
+def get_memory_probe():
+    """Making the pt 2 probe memory questions"""
+    global probed_mem_trial,final_memory_probes,old_probe_list,new_probe_list,study
+    for img_path in stacked_recog[probed_mem_trial]: # Show all pirates and take responses
+        stim = visual.ImageStim(win, image=img_path,size=(1.2,1.2))
+        stim.draw()
+    response_clock = core.Clock()
+    island_clock = core.Clock()
+    win.flip()
+    resp_key = event.waitKeys(keyList=recogKeyList,timeStamped=response_clock,maxWait=2)
+    if resp_key:
+        key,RT = resp_key[0] # RT used for data collection
+        if recogKeyList[0] in key: # 5
+            choice = 'sure_old'
+            if final_memory_probes[probed_mem_trial] in old_probe_list:
+                correct = 1
+                confidence = 'sure'
+                show_stacked_images(stacked_recog[probed_mem_trial] + [reward],duration=1)
+            elif final_memory_probes[probed_mem_trial] in new_probe_list:
+                correct = 0
+                confidence = 'sure'
+                show_stacked_images(stacked_recog[probed_mem_trial] + [no_reward],duration=1)
+        if recogKeyList[1] in key: # 6
+            if final_memory_probes[probed_mem_trial] in old_probe_list:
+                correct = 1
+                confidence = 'unsure'
+                show_stacked_images(stacked_recog[probed_mem_trial] + [reward],duration=1)
+            elif final_memory_probes[probed_mem_trial] in new_probe_list:
+                correct = 0
+                confidence = 'unsure'
+                show_stacked_images(stacked_recog[probed_mem_trial] + [no_reward],duration=1)
+        if recogKeyList[2] in key: # 7
+            choice = 'unsure_new'
+            if final_memory_probes[probed_mem_trial] in old_probe_list:
+                correct = 0
+                confidence = 'unsure'
+                show_stacked_images(stacked_recog[probed_mem_trial] + [no_reward],duration=1)
+            elif final_memory_probes[probed_mem_trial] in new_probe_list:
+                correct = 1
+                confidence = 'unsure'
+                show_stacked_images(stacked_recog[probed_mem_trial] + [reward],duration=1)
+        if recogKeyList[3] in key: # 8
+            choice = 'sure_new'
+            if final_memory_probes[probed_mem_trial] in old_probe_list:
+                correct = 0
+                confidence = 'sure'
+                show_stacked_images(stacked_recog[probed_mem_trial] + [no_reward],duration=1)
+            elif final_memory_probes[probed_mem_trial] in new_probe_list:
+                correct = 1
+                confidence = 'sure'
+                show_stacked_images(stacked_recog[probed_mem_trial] + [reward],duration=1)
+        probed_mem_trial +=1
+        study.append({
+            "ID": "",
+            "TrialType":f"pirate_recog",
+            "BlockNum": "",
+            "contextOrder": "",
+            "reward_rate_red":"",
+            "reward_rate_white":"",
+            "reward_rate_black":"",
+            "probe_order": "",
+            "QuizFailedNum": "",
+            "TimeElapsed": experiment_clock.getTime(),
+            "key_press": key,
+            "RT": RT,
+            "context": "",
+            "reward_prob_red":"",
+            "reward_prob_white":"",
+            "reward_prob_black":"",
+            "choice":choice,
+            "probe":"",
+            "reward":correct,
+            "confidence":confidence,
+            "TimeInBlock": island_clock.getTime(),
+        })
+    else:
+        too_slow()
+        probed_mem_trial +=1
+            
 
 
 # How data is saved to CSV
@@ -1081,48 +1331,64 @@ def save_data(participant_id, trials):
 
 # Main experiment flow
 
-show_text(welcome_txt)
+# show_text(welcome_txt)
 
-show_text(different_places,image_path= all_contexts,height=0.3)
+# show_text(different_places,image_path= all_contexts,height=0.3)
 
-show_text(goal_of_game_1,image_path=tutorial_ship,height=0.3)
+# show_text(goal_of_game_1,image_path=tutorial_ship,height=0.3)
 
-show_multi_img_text([goal_of_game_2a,goal_of_game_2b,goal_of_game_2c,goal_of_game_2d],image_paths=[tutorial_all_pirates,tutorial_reward,tutorial_noreward],heights=[0.8,0.25,-0.25,-0.8],img_pos=[0.5,0,-0.5],x=0.3,y=0.3)
+# show_multi_img_text([goal_of_game_2a,goal_of_game_2b,goal_of_game_2c,goal_of_game_2d],image_paths=[tutorial_all_pirates,tutorial_reward,tutorial_noreward],heights=[0.8,0.25,-0.25,-0.8],img_pos=[0.5,0,-0.5],x=0.3,y=0.4)
 
-show_text(probabilistic,image_path=tutorial_blue_pirate,height=0.5,keys=['1'])
+# show_text(probabilistic,image_path=tutorial_blue_pirate,height=0.5,keys=['1'])
 
-# practice_blue_loop()
+# # practice_blue_loop()
 
-show_text(blue_beard_outcome,keys=['space'])
+# show_text(blue_beard_outcome,keys=['space'])
 
-practice_pirates()
+# practice_pirates()
 
-practice_pirates(text=pick_pirate_again,switch='nowin')
+# practice_pirates(text=pick_pirate_again,switch='nowin')
 
-show_text(text=time_out,height=0.5,image_path=timeout_img)
+# show_text(text=time_out,height=0.5,image_path=timeout_img)
 
-show_text(text=probe,height=0.6,image_path=example_probe,text_height=0.05)
+# show_text(text=probe,height=0.6,image_path=example_probe,text_height=0.05)
 
-show_text(text=changepoint)
+# show_text(text=changepoint)
 
-show_text(text=drift,height=0.4,image_path=contingency,img_pos=-0.4)
+# show_text(text=drift,height=0.4,image_path=contingency,img_pos=-0.4)
 
-show_text(text=summary)
+# show_text(text=summary)
 
-show_stacked_images(desert_welcome,duration=3)
+# show_stacked_images(desert_welcome,duration=3)
 
-practice_pirate_loop()
+# practice_pirate_loop()
 
-show_text(quiz_intro)
+# show_text(quiz_intro)
 
-run_quiz()
+# run_quiz()
 
-show_text("Good job! You’re now ready to move on to the real game! Remember this game will be difficult but don't get discouraged and try your best!" + space_bar)
-save_data(participant_id,study)
-learn_phase_loop()
+# show_text("Good job! You’re now ready to move on to the real game! Remember this game will be difficult but don't get discouraged and try your best!" + space_bar)
+# save_data(participant_id,study)
+# learn_phase_loop()
 
-save_data(participant_id,study)
-show_text("You are all done with the first part of the study! Thank you for participating.\n\n\n\nPress the spacebar to exit")
+# save_data(participant_id,study)
+
+# show_text("You are all done with the first part of the study! Thank you for participating.\n\n\n\nPress the spacebar to exit")
+# take_break()
+
+# show_multi_img_text([goal_summary,goal_summary2],image_paths=[tutorial_reward,tutorial_noreward],heights=[0.6,-0.3],img_pos=[0.1,-0.7],x=0.3,y=0.4)
+
+# show_text(how_to_pick_summary)
+
+# show_text(text=recognition_1,image_path=example_recog,height=0.5)
+
+# show_text(text=recognition_2,image_path=example_recog,height=0.4,img_pos=-0.5,text_height=0.06)
+
+# show_multi_img_text(texts=[recognition_3,recognition_3b,recognition_3c],image_paths=[memory_reward,tutorial_noreward],heights=[0.6,0.1,-0.6],img_pos=[0.35,-0.20],x=0.3,y=0.4)
+
+show_text(begin_final)
+init_responses()
+pt2_memory_probes(choice_blocks=choice_blocks)
 
 win.close()
 core.quit()

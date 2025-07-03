@@ -216,19 +216,19 @@ probabilities = {
     3: payout[2] * 0.01
 }
 
-# Plotting
+#Plotting
 # plt.figure(figsize=(12, 6))
 
 # # Plot each bandit's payout trajectory
-# plt.plot(probabilities[1][0:210], label='Bandit 1', color='green')
-# plt.plot(probabilities[2][0:210], label='Bandit 2', color='red')
-# plt.plot(probabilities[3][0:210], label='Bandit 3', color='blue')
-# for d in [30, 70, 110, 150, 190]:
+# plt.plot(list(range(241, 481)),probabilities[1][240:], label='Bandit 1', color='green')
+# plt.plot(list(range(241, 481)),probabilities[2][240:], label='Bandit 2', color='red')
+# plt.plot(list(range(241, 481)),probabilities[3][240:], label='Bandit 3', color='blue')
+# for d in [240, 280, 320, 360, 400,440]:
 #     print(d)
-#     plt.axvspan(d,d+10, color='pink', alpha=0.3)
 #     plt.axvline(d,color='black')
 # # Formatting
 # plt.xlabel('Trial')
+# plt.xticks([240,480])
 # plt.ylabel('Probability for Reward')
 # plt.title('Bandit Payout Probabilities Over Trials')
 # plt.legend()
@@ -336,4 +336,90 @@ reward_imgs = {
     key: np.where(arr == 1, 'reward', 'no_reward')
     for key, arr in ifReward.items()
 }
-print(ifReward[3].tolist())
+# print(ifReward[3].tolist())
+
+
+import numpy as np
+
+# Parameters
+sample_window = 10
+mean_ct = 5
+min_ct = 2
+max_ct = 8
+num_probes = sample_window * (num_blocks-1)
+num_invalid_probes = np.round(num_probes/5)
+num_probes = int(num_probes + num_invalid_probes)
+# Step 1: Generate exponentially-distributed choice_blocks
+log_rand = np.log(np.random.rand(num_probes))
+log_rand_div_mean_ct = log_rand / (1 / mean_ct)
+choice_blocks = np.ceil(log_rand_div_mean_ct) * -1 + min_ct
+choice_blocks = np.clip(choice_blocks, min_ct, max_ct).astype(int)
+
+# Step 2: Adjust until sum == num_trials/2 and all values are within bounds
+while (choice_blocks.sum() != num_trials // 2 or
+       np.any(choice_blocks < min_ct) or
+       np.any(choice_blocks > max_ct)):
+
+    # Random index to modify
+    ind = np.random.randint(0, num_probes)
+
+    # Increase or decrease based on current sum
+    delta = int(np.sign(choice_blocks.sum() - (num_trials // 2)))
+    choice_blocks[ind] -= delta
+
+    # Clamp again
+    choice_blocks = np.clip(choice_blocks, min_ct, max_ct)
+
+# Step 3: Subtract 1 from each (to leave space for a mem_trial) and add 10 to first
+choice_blocks = choice_blocks - 1
+choice_blocks[0] += 10
+
+# Step 4: Compute memory probe trial indices
+block_sizes = choice_blocks + 1
+cumsum_blocks = np.cumsum(block_sizes)
+mem_probe_trials = cumsum_blocks + (num_trials // 2)  # shift into 2nd half
+mem_probe_trials = mem_probe_trials - 1  # zero-indexing
+
+# Step 5: Compute choice trials (set difference)
+all_trials = np.arange(num_trials)
+choice_trials = np.setdiff1d(all_trials, mem_probe_trials)
+
+# # Print results
+# print("choice_blocks:", choice_blocks.tolist())
+# print("mem_probe_trials:", mem_probe_trials.tolist())
+# print("choice_trials:", choice_trials.tolist())
+
+response_check=np.random.randint(0,2,230)
+response_sorted = []
+memory_probes = []
+final_memory_probes = []
+probed_context = []
+final_probed_context = []
+def init_responses():
+    global response_sorted,memory_probes,final_memory_probes,probed_context,final_probed_context
+    context_num = ["2","3","4","5","6"]
+    for i,t in enumerate([30, 70, 110, 150, 190]):
+        for added_trials in range(0,10):
+            response_sorted.append(response_check[t+added_trials])
+            memory_probes.append(valid_probe_images[t+added_trials])
+            probed_context.append(context_num[i])
+    for i,probe in enumerate(memory_probes):
+        if response_sorted[i]==1:
+            final_memory_probes.append(probe)
+            final_probed_context.append(probed_context[i])
+    invalid_idx = 0
+    while final_memory_probes != 60:
+        final_memory_probes.append(invalid_probe_images[invalid_idx]) # Add 10 random new shuffled imgs and then any leftover if trials were skipped
+        final_probed_context.append("NA") # Not tested
+        invalid_idx +=1
+        if invalid_idx == 24: # In case they need more than 15 extra images (should not happen)
+            break
+
+    mem_idx = list(range(len(final_memory_probes)))
+    random.shuffle(mem_idx)
+
+    final_memory_probes = [final_memory_probes[i] for i in mem_idx]
+    final_probed_context = [final_probed_context[i] for i in mem_idx]
+init_responses()
+print(final_probed_context)
+print(len(payout[0]))

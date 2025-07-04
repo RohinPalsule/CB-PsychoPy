@@ -46,6 +46,7 @@ red_no_win = image_prefix + "tutorial/red_no_win.png"
 white_no_win = image_prefix + "tutorial/white_no_win.png"
 timeout_img = image_prefix + "miscellaneous/hurry_up.png"
 
+source_question = image_prefix + "miscellaneous/source_question.png"
 example_probe = image_prefix + "tutorial/example_probe.png"
 contingency = image_prefix + "tutorial/contingency.png"
 
@@ -61,6 +62,9 @@ all_pirates = image_prefix + "pirates/pirates_all.png"
 red_pirate = image_prefix + "pirates/red_beard.png"
 white_pirate = image_prefix + "pirates/white_beard.png"
 black_pirate = image_prefix + "pirates/black_beard.png"
+
+pick_pirate_tutorial = image_prefix + "tutorial/example_pick_best.png"
+pt2_source_memory_img = image_prefix + "tutorial/example_source_memory.png"
 
 reward = image_prefix + "rewards/reward.png"
 no_reward = image_prefix + "rewards/reward_no.png"
@@ -202,8 +206,8 @@ recognition_3b = "If you do not remember correctly, then you'll see a red x like
 recognition_3c = "Importantly, when you are shown a ship, take the time to remind yourself which island you saw it on. This will help you in the next part of the study." + space_bar
 begin_final = "Let's go over the important points again. Your job is to:\n\n\n\n1. Pick the pirate who is best at robbing ships and will bring you back gold coins.\n\n2. Correctly remember whether or not you saw a ship before. If you did see the ship before, remind yourself on which island you saw it.\n\n"+space_bar
 
-source_memory = " Ok, you’re almost done! In this part, you’ll see a ship you saw yesterday, and you will have to pick the island on which you saw it using the keys 1, 2, 3, 4, 5, 6 on your keyboard. The number above each picture tells you which key to press to pick that island. Every time you pick the right island you’ll win some more bonus money, so try your best to remember! <img src='run_exp/static/images/tutorial/example_source_memory.png' height='500'>"
-pick_best_pirate = " Ok, this is your final game of the day. You’ll be shown an island, and you’ll have to pick the pirate you thought was the best at robbing ships on that island. You will use the 1, 2, 3 keys on your keyboard. Just like before, press '1' to choose red beard, '2' to choose white beard, and '3' to choose black beard. Once you pick a pirate, a gold box will surround your choice. Then, you’ll have to pick the pirate you thought was the second best at robbing ships on that island. Once you pick a pirate, a silver box will surround your choice. Then, you’ll move on to the next island.  <img src='run_exp/static/images/tutorial/example_pick_best.png' height='500'>"
+source_memory = "Ok, you’re almost done! In this part, you’ll see a ship you saw yesterday, and you will have to pick the island on which you saw it using the keys 1, 2, 3, 4, 5, 6 on your keyboard. The number above each picture tells you which key to press to pick that island. Every time you pick the right island you’ll win some more bonus money, so try your best to remember!"
+pick_best_pirate = " Ok, this is your final game of the day. You’ll be shown an island, and you’ll have to pick the pirate you thought was the best at robbing ships on that island. You will use the 1, 2, 3 keys on your keyboard. Just like before, press '1' to choose red beard, '2' to choose white beard, and '3' to choose black beard. Once you pick a pirate, a gold box will surround your choice. Then, you’ll have to pick the pirate you thought was the second best at robbing ships on that island. Once you pick a pirate, a silver box will surround your choice. Then, you’ll move on to the next island."
 #/////////////////////////////////////////////////////////////////////////
 
 
@@ -444,6 +448,10 @@ stacked_seven_red_reward = []
 stacked_seven_white_reward = []
 stacked_seven_black_reward = []
 stacked_seven_room_pirates = []
+
+source_memory_contexts = [image_prefix + "contexts/source_1_highway.png",image_prefix + "contexts/source_2_coast.png",image_prefix + "contexts/source_3_mountain.png",
+                          image_prefix + "contexts/source_4_forest.png",image_prefix + "contexts/source_5_city.png",image_prefix + "contexts/source_6_countryside.png"]
+
 pt2_index = first_block + ((num_blocks-1) * block_len)
 
 
@@ -470,7 +478,7 @@ failedNum = 0
 # Init keyboard list from yaml
 keyList = [config['params']['BUTTON_1'],config['params']['BUTTON_2'],config['params']['BUTTON_3']]
 recogKeyList = [config['params']['BUTTON_5'],config['params']['BUTTON_6'],config['params']['BUTTON_7'],config['params']['BUTTON_8']]
-
+source_key_list = [config['params']['BUTTON_1'],config['params']['BUTTON_2'],config['params']['BUTTON_3'],config['params']['BUTTON_4'],config['params']['BUTTON_5'],config['params']['BUTTON_6']]
 if len(sys.argv) < 2: # Call participant ID in terminal
     print("Error: No participant ID provided.")
     print("Usage: python3 experiment.py <participant_id>")
@@ -804,7 +812,7 @@ def practice_pirates(text=pick_pirate,switch='win'):
             
 # Where the main task is run
 
-def practice_pirate_loop(duration = 2,setting = 'desert'):
+def practice_pirate_loop(duration=3,setting = 'desert'):
     """For choosing the pirate, getting the probe, and seeing if there is a reward"""
     global curr_prac_trial,study
     if setting == 'desert':
@@ -1008,7 +1016,7 @@ def learn_phase_loop():
     response_clock = core.Clock()
     island_clock = core.Clock()
     win.flip()
-    resp_key = event.waitKeys(keyList=keyList,timeStamped=response_clock,maxWait=2)
+    resp_key = event.waitKeys(keyList=keyList,timeStamped=response_clock,maxWait=3)
     
     if resp_key:
         key,RT = resp_key[0] # RT used for data collection
@@ -1174,7 +1182,7 @@ def pt2_memory_probes(choice_blocks=choice_blocks):
             response_clock = core.Clock()
             island_clock = core.Clock()
             win.flip()
-            resp_key = event.waitKeys(keyList=keyList,timeStamped=response_clock,maxWait=2)
+            resp_key = event.waitKeys(keyList=keyList,timeStamped=response_clock,maxWait=3)
             
             if resp_key:
                 key,RT = resp_key[0] # RT used for data collection
@@ -1232,7 +1240,7 @@ def get_memory_probe():
     response_clock = core.Clock()
     island_clock = core.Clock()
     win.flip()
-    resp_key = event.waitKeys(keyList=recogKeyList,timeStamped=response_clock,maxWait=2)
+    resp_key = event.waitKeys(keyList=recogKeyList,timeStamped=response_clock,maxWait=3)
     if resp_key:
         key,RT = resp_key[0] # RT used for data collection
         if recogKeyList[0] in key: # 5
@@ -1288,7 +1296,7 @@ def get_memory_probe():
             "TimeElapsed": experiment_clock.getTime(),
             "key_press": key,
             "RT": RT,
-            "context": "",
+            "context": final_probed_context[probed_mem_trial],
             "reward_prob_red":"",
             "reward_prob_white":"",
             "reward_prob_black":"",
@@ -1302,8 +1310,120 @@ def get_memory_probe():
         too_slow()
         probed_mem_trial +=1
             
+stacked_source_memory = []
+stacked_source_memory_reward = []
+stacked_source_memory_no_reward = []
+def source_memory_init():
+    """Initializing source memory"""
+    global old_probe_list
+    for i,probe in enumerate(old_probe_list):
+        stacked_source_memory.append([source_question,probe_ship,probe]+source_memory_contexts)
+        stacked_source_memory_reward.append([source_question,probe_ship,probe,reward]+source_memory_contexts)
+        stacked_source_memory_no_reward.append([source_question,probe_ship,probe,no_reward]+source_memory_contexts)
 
+source_memory_trial = 0
 
+def pt2_source_memory():
+    """Source memory trials in part 2"""
+    global stacked_source_memory,stacked_source_memory_reward,stacked_source_memory_no_reward,source_memory_trial
+    for img_path in stacked_source_memory[source_memory_trial]: # Show all pirates and take responses
+        stim = visual.ImageStim(win, image=img_path,size=(1.2,1.2))
+        stim.draw()
+    response_clock = core.Clock()
+    island_clock = core.Clock()
+    win.flip()
+    resp_key = event.waitKeys(keyList=source_key_list,timeStamped=response_clock,maxWait=2)
+    if resp_key:
+        key,RT = resp_key[0] # RT used for data collection
+        if source_key_list[0] in key: # 1
+            choice = 'context_1'
+            if final_probed_context[source_memory_trial]=='1':
+                correct = 1
+                show_stacked_images(stacked_source_memory[source_memory_trial] + [reward],duration=1)
+            else:
+                correct = 0
+                show_stacked_images(stacked_source_memory[source_memory_trial] + [no_reward],duration=1)
+        if source_key_list[1] in key: # 2
+            choice = 'context_2'
+            if final_probed_context[source_memory_trial]=='2':
+                correct = 1
+                show_stacked_images(stacked_source_memory[source_memory_trial] + [reward],duration=1)
+            else:
+                correct = 0
+                show_stacked_images(stacked_source_memory[source_memory_trial] + [no_reward],duration=1)
+        if source_key_list[2] in key: # 3
+            choice = 'context_3'
+            if final_probed_context[source_memory_trial]=='3':
+                correct = 1
+                show_stacked_images(stacked_source_memory[source_memory_trial] + [reward],duration=1)
+            else:
+                correct = 0
+                show_stacked_images(stacked_source_memory[source_memory_trial] + [no_reward],duration=1)
+        if source_key_list[3] in key: # 4
+            choice = 'context_4'
+            if final_probed_context[source_memory_trial]=='4':
+                correct = 1
+                show_stacked_images(stacked_source_memory[source_memory_trial] + [reward],duration=1)
+            else:
+                correct = 0
+                show_stacked_images(stacked_source_memory[source_memory_trial] + [no_reward],duration=1)
+        if source_key_list[4] in key: # 5
+            choice = 'context_5'
+            if final_probed_context[source_memory_trial]=='5':
+                correct = 1
+                show_stacked_images(stacked_source_memory[source_memory_trial] + [reward],duration=1)
+            else:
+                correct = 0
+                show_stacked_images(stacked_source_memory[source_memory_trial] + [no_reward],duration=1)
+        if source_key_list[5] in key: # 6
+            choice = 'context_6'
+            if final_probed_context[source_memory_trial]=='6':
+                correct = 1
+                show_stacked_images(stacked_source_memory[source_memory_trial] + [reward],duration=1)
+            else:
+                correct = 0
+                show_stacked_images(stacked_source_memory[source_memory_trial] + [no_reward],duration=1)
+        study.append({
+            "ID": "",
+            "TrialType":f"source_memory",
+            "BlockNum": "",
+            "contextOrder": "",
+            "reward_rate_red":"",
+            "reward_rate_white":"",
+            "reward_rate_black":"",
+            "probe_order": "",
+            "QuizFailedNum": "",
+            "TimeElapsed": experiment_clock.getTime(),
+            "key_press": key,
+            "RT": RT,
+            "context": stacked_source_memory[source_memory_trial],
+            "reward_prob_red":"",
+            "reward_prob_white":"",
+            "reward_prob_black":"",
+            "choice":choice,
+            "probe":"",
+            "reward":correct,
+            "confidence":"",
+            "TimeInBlock": island_clock.getTime(),
+        })
+        source_memory_trial +=1
+        if source_memory_trial == len(stacked_source_memory):
+            pass
+        else: 
+            show_blank_screen()
+            pt2_source_memory()
+    else:
+        too_slow()
+        source_memory_trial +=1
+        if source_memory_trial == len(stacked_source_memory):
+            pass
+        else: 
+            show_blank_screen()
+            pt2_source_memory()
+
+def show_blank_screen():
+    win.flip()  # show the blank screen
+    core.wait(1.0)  # duration in seconds
 # How data is saved to CSV
 def save_data(participant_id, trials):
     """Save collected data to a CSV file, automatically detecting headers."""
@@ -1386,9 +1506,17 @@ def save_data(participant_id, trials):
 
 # show_multi_img_text(texts=[recognition_3,recognition_3b,recognition_3c],image_paths=[memory_reward,tutorial_noreward],heights=[0.6,0.1,-0.6],img_pos=[0.35,-0.20],x=0.3,y=0.4)
 
-show_text(begin_final)
+# show_text(begin_final)
 init_responses()
-pt2_memory_probes(choice_blocks=choice_blocks)
+# pt2_memory_probes(choice_blocks=choice_blocks)
+
+show_text(text=source_memory + space_bar,height=0.5,image_path=pt2_source_memory_img,img_pos=-0.4)
+
+source_memory_init()
+pt2_source_memory()
+
+show_text(pick_best_pirate + space_bar,height=0.45, image_path=pick_pirate_tutorial,img_pos=-0.4,x=1.4,y=0.8)
 
 win.close()
 core.quit()
+

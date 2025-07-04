@@ -73,6 +73,7 @@ probe_ship = image_prefix + "miscellaneous/cargo_ship.png"
 bye_island = image_prefix + "travel/bye.png"
 
 best_pirate = image_prefix + "tutorial/prac_best_pirate.png"
+pt2_all_pirates = image_prefix + "tutorial/pirates_all_crop.png"
 source_practice = image_prefix + "tutorial/prac_source.png"
 incorrect_quiz_feedback = ["That’s incorrect. You win bonus money by collecting gold coins.",
                            "That’s incorrect. Which pirate is the best may change during your time on the island.",
@@ -154,6 +155,14 @@ for i,probe in enumerate(practice_probes_cavern):
 curr_trial = 0
 curr_prac_trial = 0
 probed_mem_trial = 0
+response_sorted = []
+memory_probes = []
+final_memory_probes = []
+probed_context = []
+final_probed_context = []
+old_probe_list = []
+new_probe_list = []
+stacked_recog = []
 
 # Instruction init
 space_bar = "\n\n[Press the space bar to continue]"
@@ -454,7 +463,7 @@ source_memory_contexts = [image_prefix + "contexts/source_1_highway.png",image_p
 
 pt2_index = first_block + ((num_blocks-1) * block_len)
 
-
+# Seventh Room
 for i in range(230,num_trials):
     stacked_seven_room.append([deck,context_seven])
     stacked_seven_room_pirates.append([deck,context_seven,all_pirates])
@@ -466,6 +475,21 @@ for i in range(230,num_trials):
     stacked_seven_black_reward.append([deck,context_seven,black_pirate,reward_imgs[3][i]])
 
 recog_question = image_prefix + "miscellaneous/probe_recog.png"
+
+# Best Pirate
+best_question = image_prefix + "pick_best/best_question.png"
+
+red_best = image_prefix + "pick_best/red_best.png"
+white_best = image_prefix + "pick_best/white_best.png"
+black_best = image_prefix + "pick_best/black_best.png"
+
+stacked_best_pirate = []
+context_order_labels = []
+for c in contexts:
+    stacked_best_pirate.append([best_question,c,all_pirates])
+    context_order_labels.append(c.split("contexts/context_")[-1].split(".png")[0])
+best_pirate_trial = 0
+
 
 # Sequences
 ship_sequence = [image_prefix + r for r in config["ship_sequence"]] # For ship travelling between contexts
@@ -508,6 +532,12 @@ def write_study():
                 row["AlienOrder"] = row["AlienOrder"].tolist()
         yaml.dump(study, file)
 
+# Modify probe numbers for data collection
+probe_nums = []
+for valid_img_probe_num in valid_probe_images:
+    probe_nums.append(valid_img_probe_num.split("images/probes/probes-")[-1].split(".png")[0])
+
+
 # Initial data format -- What the csv reader takes as column names
 study.append({
     "ID": participant_id,
@@ -517,7 +547,7 @@ study.append({
     "reward_rate_red":probabilities[1].tolist(), # List of reward rates for red pirate and below is white and black
     "reward_rate_white":probabilities[2].tolist(),
     "reward_rate_black":probabilities[3].tolist(),
-    "probe_order": valid_probe_images,
+    "probe_order": probe_nums,
     "QuizFailedNum": "",
     "TimeElapsed": experiment_clock.getTime(),
     "key_press": "",
@@ -529,6 +559,7 @@ study.append({
     "choice":"",
     "probe":"",
     "reward":"",
+    "confidence":"",
     "TimeInBlock": "",
 })
 # init in case exp breaks
@@ -630,12 +661,18 @@ def show_image(img_path, duration=1.5):
     win.flip()
     core.wait(duration)
 
-def show_stacked_images(img_paths = [], duration=3):
+def show_stacked_images(img_paths = [], duration=3,y=None):
     """Displays an image for a given duration"""
-    for img_path in img_paths:
-        stim = visual.ImageStim(win, image=img_path,size=(1.2,1.2))
-        stim.draw()
-    win.flip()
+    if y:
+        for i,img_path in enumerate(img_paths):
+            stim = visual.ImageStim(win, image=img_path,size=(1.2,1.2),pos=(0,y[i]))
+            stim.draw()
+        win.flip()
+    else:
+        for img_path in img_paths:
+            stim = visual.ImageStim(win, image=img_path,size=(1.2,1.2),pos=(0,0))
+            stim.draw()
+        win.flip()
     core.wait(duration)
 
 # Timeout image for 2 seconds
@@ -819,7 +856,6 @@ def practice_pirate_loop(duration=3,setting = 'desert'):
         location = desert_pirates
     elif setting == 'cavern':
         location = cavern_pirates
-    
     for img_path in location:
         stim = visual.ImageStim(win, image=img_path,size=(1.2,1.2))
         stim.draw()
@@ -1129,13 +1165,7 @@ def take_break():
         "confidence":"",
         "TimeInBlock": island_clock.getTime(),
     })
-response_sorted = []
-memory_probes = []
-final_memory_probes = []
-probed_context = []
-final_probed_context = []
-old_probe_list = []
-new_probe_list = []
+
 def init_responses():
     global response_sorted,memory_probes,final_memory_probes,probed_context,final_probed_context,old_probe_list,new_probe_list
     context_num = ["2","3","4","5","6"]
@@ -1168,8 +1198,6 @@ def init_responses():
 
     for i in range(len(final_memory_probes)):
         stacked_recog.append([recog_question,probe_ship,final_memory_probes[i]])
-
-stacked_recog = []
 
 def pt2_memory_probes(choice_blocks=choice_blocks):
     """Running the seventh room and intermittent memory trials"""
@@ -1332,7 +1360,7 @@ def pt2_source_memory():
     response_clock = core.Clock()
     island_clock = core.Clock()
     win.flip()
-    resp_key = event.waitKeys(keyList=source_key_list,timeStamped=response_clock,maxWait=2)
+    resp_key = event.waitKeys(keyList=source_key_list,timeStamped=response_clock,maxWait=3)
     if resp_key:
         key,RT = resp_key[0] # RT used for data collection
         if source_key_list[0] in key: # 1
@@ -1421,9 +1449,71 @@ def pt2_source_memory():
             show_blank_screen()
             pt2_source_memory()
 
-def show_blank_screen():
+def show_blank_screen(duration=0.5):
+    """How long a blank white screen shows"""
     win.flip()  # show the blank screen
-    core.wait(1.0)  # duration in seconds
+    core.wait(duration)  # duration in seconds
+
+def pt2_best_pirate():
+    global best_pirate_trial
+    """For last phase where each context is shown with a pirate selection"""
+    y = [0.1,0.1,-0.2]
+    for i,img_path in enumerate(stacked_best_pirate[best_pirate_trial]): # Show all pirates and take responses
+        stim = visual.ImageStim(win, image=img_path,size=(1.2,1.2),pos = (0,y[i]))
+        stim.draw()
+    response_clock = core.Clock()
+    island_clock = core.Clock()
+    win.flip()
+    resp_key = event.waitKeys(keyList=keyList,timeStamped=response_clock,maxWait=2)
+    if resp_key:
+        key,RT = resp_key[0] # RT used for data collection
+        if source_key_list[0] in key: # 1
+            choice = 'red_pirate'
+            show_stacked_images(stacked_best_pirate[best_pirate_trial] + [red_best],duration=1, y=[0.1,0.1,-0.2,-0.2])
+        if source_key_list[1] in key: # 2
+            choice = 'white_pirate'
+            show_stacked_images(stacked_best_pirate[best_pirate_trial] + [white_best],duration=1, y = [0.1,0.1,-0.2,-0.2])
+        if source_key_list[2] in key: # 3
+            choice = 'black_pirate'
+            show_stacked_images(stacked_best_pirate[best_pirate_trial] + [black_best],duration=1, y = [0.1,0.1,-0.2,-0.2])
+        study.append({
+            "ID": "",
+            "TrialType":f"source_memory",
+            "BlockNum": "",
+            "contextOrder": "",
+            "reward_rate_red":"",
+            "reward_rate_white":"",
+            "reward_rate_black":"",
+            "probe_order": "",
+            "QuizFailedNum": "",
+            "TimeElapsed": experiment_clock.getTime(),
+            "key_press": key,
+            "RT": RT,
+            "context": context_order_labels[best_pirate_trial],
+            "reward_prob_red":"",
+            "reward_prob_white":"",
+            "reward_prob_black":"",
+            "choice":choice,
+            "probe":"",
+            "reward":"",
+            "confidence":"",
+            "TimeInBlock": island_clock.getTime(),
+        })
+        best_pirate_trial +=1
+        if best_pirate_trial == len(contexts):
+            pass
+        else: 
+            show_blank_screen()
+            pt2_best_pirate()
+    else:
+        too_slow()
+        best_pirate_trial +=1
+        if best_pirate_trial == len(contexts):
+            pass
+        else: 
+            show_blank_screen()
+            pt2_best_pirate()
+
 # How data is saved to CSV
 def save_data(participant_id, trials):
     """Save collected data to a CSV file, automatically detecting headers."""
@@ -1451,64 +1541,64 @@ def save_data(participant_id, trials):
 
 # Main experiment flow
 
-# show_text(welcome_txt)
+show_text(welcome_txt)
 
-# show_text(different_places,image_path= all_contexts,height=0.3)
+show_text(different_places,image_path= all_contexts,height=0.3)
 
-# show_text(goal_of_game_1,image_path=tutorial_ship,height=0.3)
+show_text(goal_of_game_1,image_path=tutorial_ship,height=0.3)
 
-# show_multi_img_text([goal_of_game_2a,goal_of_game_2b,goal_of_game_2c,goal_of_game_2d],image_paths=[tutorial_all_pirates,tutorial_reward,tutorial_noreward],heights=[0.8,0.25,-0.25,-0.8],img_pos=[0.5,0,-0.5],x=0.3,y=0.4)
+show_multi_img_text([goal_of_game_2a,goal_of_game_2b,goal_of_game_2c,goal_of_game_2d],image_paths=[tutorial_all_pirates,tutorial_reward,tutorial_noreward],heights=[0.8,0.25,-0.25,-0.8],img_pos=[0.5,0,-0.5],x=0.3,y=0.4)
 
-# show_text(probabilistic,image_path=tutorial_blue_pirate,height=0.5,keys=['1'])
+show_text(probabilistic,image_path=tutorial_blue_pirate,height=0.5,keys=['1'])
 
-# # practice_blue_loop()
+practice_blue_loop()
 
-# show_text(blue_beard_outcome,keys=['space'])
+show_text(blue_beard_outcome,keys=['space'])
 
-# practice_pirates()
+practice_pirates()
 
-# practice_pirates(text=pick_pirate_again,switch='nowin')
+practice_pirates(text=pick_pirate_again,switch='nowin')
 
-# show_text(text=time_out,height=0.5,image_path=timeout_img)
+show_text(text=time_out,height=0.5,image_path=timeout_img)
 
-# show_text(text=probe,height=0.6,image_path=example_probe,text_height=0.05)
+show_text(text=probe,height=0.6,image_path=example_probe,text_height=0.05)
 
-# show_text(text=changepoint)
+show_text(text=changepoint)
 
-# show_text(text=drift,height=0.4,image_path=contingency,img_pos=-0.4)
+show_text(text=drift,height=0.4,image_path=contingency,img_pos=-0.4)
 
-# show_text(text=summary)
+show_text(text=summary)
 
-# show_stacked_images(desert_welcome,duration=3)
+show_stacked_images(desert_welcome,duration=3)
 
-# practice_pirate_loop()
+practice_pirate_loop()
 
-# show_text(quiz_intro)
+show_text(quiz_intro)
 
-# run_quiz()
+run_quiz()
 
-# show_text("Good job! You’re now ready to move on to the real game! Remember this game will be difficult but don't get discouraged and try your best!" + space_bar)
-# save_data(participant_id,study)
-# learn_phase_loop()
+show_text("Good job! You’re now ready to move on to the real game! Remember this game will be difficult but don't get discouraged and try your best!" + space_bar)
+save_data(participant_id,study)
+learn_phase_loop()
 
-# save_data(participant_id,study)
+save_data(participant_id,study)
 
-# show_text("You are all done with the first part of the study! Thank you for participating.\n\n\n\nPress the spacebar to exit")
-# take_break()
+show_text("You are all done with the first part of the study! Thank you for participating.\n\n\n\nPress the spacebar to exit")
+take_break()
 
-# show_multi_img_text([goal_summary,goal_summary2],image_paths=[tutorial_reward,tutorial_noreward],heights=[0.6,-0.3],img_pos=[0.1,-0.7],x=0.3,y=0.4)
+show_multi_img_text([goal_summary,goal_summary2],image_paths=[tutorial_reward,tutorial_noreward],heights=[0.6,-0.3],img_pos=[0.1,-0.7],x=0.3,y=0.4)
 
-# show_text(how_to_pick_summary)
+show_text(how_to_pick_summary)
 
-# show_text(text=recognition_1,image_path=example_recog,height=0.5)
+show_text(text=recognition_1,image_path=example_recog,height=0.5)
 
-# show_text(text=recognition_2,image_path=example_recog,height=0.4,img_pos=-0.5,text_height=0.06)
+show_text(text=recognition_2,image_path=example_recog,height=0.4,img_pos=-0.5,text_height=0.06)
 
-# show_multi_img_text(texts=[recognition_3,recognition_3b,recognition_3c],image_paths=[memory_reward,tutorial_noreward],heights=[0.6,0.1,-0.6],img_pos=[0.35,-0.20],x=0.3,y=0.4)
+show_multi_img_text(texts=[recognition_3,recognition_3b,recognition_3c],image_paths=[memory_reward,tutorial_noreward],heights=[0.6,0.1,-0.6],img_pos=[0.35,-0.20],x=0.3,y=0.4)
 
-# show_text(begin_final)
+show_text(begin_final)
 init_responses()
-# pt2_memory_probes(choice_blocks=choice_blocks)
+pt2_memory_probes(choice_blocks=choice_blocks)
 
 show_text(text=source_memory + space_bar,height=0.5,image_path=pt2_source_memory_img,img_pos=-0.4)
 
@@ -1516,6 +1606,12 @@ source_memory_init()
 pt2_source_memory()
 
 show_text(pick_best_pirate + space_bar,height=0.45, image_path=pick_pirate_tutorial,img_pos=-0.4,x=1.4,y=0.8)
+
+pt2_best_pirate()
+
+save_data(participant_id,study)
+
+show_text("Thank you for your participation in this expeirment. Please contact your experimenter to let them know that you are all done.")
 
 win.close()
 core.quit()

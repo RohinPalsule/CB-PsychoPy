@@ -27,6 +27,10 @@ island_clock = core.Clock()
 debug = config.get("debug", False)
 block_length = config["block_length_debug"] if debug else config["block_length"]
 
+# Bonus money init
+bonus_money = 0
+bonus_correct = 0
+
 # Instruction imgs
 all_contexts = image_prefix + "contexts/all_contexts.png"
 tutorial_ship = image_prefix + "tutorial/ship_center.png"
@@ -561,6 +565,7 @@ study.append({
     "reward":"",
     "confidence":"",
     "TimeInBlock": "",
+    "Bonus":""
 })
 # init in case exp breaks
 write_study()  
@@ -610,6 +615,7 @@ def show_text(text, image_path=None,x=1,y=1,height=0,img_pos = -0.3,text_height=
         "reward":"",
         "confidence":"",
         "TimeInBlock": "",
+        "Bonus":""
     })
 
 def show_multi_img_text(texts=[], image_paths=None,x=1,y=1,heights=[],img_pos=[],text_height=config['params']['FONT_SIZE'],keys=['space']):
@@ -652,6 +658,7 @@ def show_multi_img_text(texts=[], image_paths=None,x=1,y=1,heights=[],img_pos=[]
         "reward":"",
         "confidence":"",
         "TimeInBlock": "",
+        "Bonus":""
     })
 # Shows an image for some duration
 def show_image(img_path, duration=1.5):
@@ -700,6 +707,7 @@ def too_slow():
         "reward":"",
         "confidence":"",
         "TimeInBlock": "",
+        "Bonus":""
     })
 
 # Rocket travel trials
@@ -734,6 +742,7 @@ def travel_trial():
         "reward":"",
         "confidence":"",
         "TimeInBlock": "",
+        "Bonus":""
     })
     win.flip()
 
@@ -805,6 +814,7 @@ def run_quiz():
             "reward":"",
             "confidence":"",
             "TimeInBlock": "",
+            "Bonus":""
         })
         pass
     else:
@@ -927,6 +937,7 @@ def practice_pirate_loop(duration=3,setting = 'desert'):
             "reward":rewards[int(key)][trial_num],
             "confidence":"",
             "TimeInBlock": "",
+            "Bonus":""
         })
         curr_prac_trial +=1
         if curr_prac_trial < 5:
@@ -976,6 +987,7 @@ def practice_pirate_loop(duration=3,setting = 'desert'):
                 "reward":"",
                 "confidence":"",
                 "TimeInBlock": "",
+                "Bonus":""
             })
             stim = visual.ImageStim(win, image=source_practice,size=(1.2,1.2))
             stim.draw()
@@ -1012,6 +1024,7 @@ def practice_pirate_loop(duration=3,setting = 'desert'):
                 "reward":"",
                 "confidence":"",
                 "TimeInBlock": "",
+                "Bonus":""
             })
     else:
         show_image(timeout_img,duration=2)
@@ -1038,6 +1051,7 @@ def practice_pirate_loop(duration=3,setting = 'desert'):
                 "reward":"",
                 "confidence":"",
                 "TimeInBlock": "",
+                "Bonus":""
             })
 
 def learn_phase_loop():
@@ -1098,6 +1112,7 @@ def learn_phase_loop():
             "reward":ifReward[int(key)][curr_trial],
             "confidence":"",
             "TimeInBlock": island_clock.getTime(),
+            "Bonus":""
         })
         curr_trial +=1 # Advance trial
         if curr_trial == first_block + (block_len * (num_blocks - 1)):
@@ -1135,6 +1150,7 @@ def learn_phase_loop():
                 "reward":"",
                 "confidence":"",
                 "TimeInBlock": "",
+                "Bonus":""
             })
         learn_phase_loop()
 
@@ -1164,6 +1180,7 @@ def take_break():
         "reward":"",
         "confidence":"",
         "TimeInBlock": island_clock.getTime(),
+        "Bonus":""
     })
 
 def init_responses():
@@ -1201,7 +1218,7 @@ def init_responses():
 
 def pt2_memory_probes(choice_blocks=choice_blocks):
     """Running the seventh room and intermittent memory trials"""
-    global pt2_index,study
+    global pt2_index,study,bonus_money,bonus_correct
     for block in choice_blocks:
         for trial in range(block):
             for img_path in stacked_seven_room_pirates[pt2_index-230]: # Show all pirates and take responses
@@ -1253,15 +1270,17 @@ def pt2_memory_probes(choice_blocks=choice_blocks):
                         "reward":ifReward[int(key)][pt2_index],
                         "confidence":"",
                         "TimeInBlock": island_clock.getTime(),
+                        "Bonus":""
                     })
                 else: pass
             else:
                 too_slow()
         get_memory_probe()
+    bonus_money = np.round(bonus_correct*0.05)
 
 def get_memory_probe():
     """Making the pt 2 probe memory questions"""
-    global probed_mem_trial,final_memory_probes,old_probe_list,new_probe_list,study
+    global probed_mem_trial,final_memory_probes,old_probe_list,new_probe_list,study,bonus_correct
     for img_path in stacked_recog[probed_mem_trial]: # Show all pirates and take responses
         stim = visual.ImageStim(win, image=img_path,size=(1.2,1.2))
         stim.draw()
@@ -1275,6 +1294,7 @@ def get_memory_probe():
             choice = 'sure_old'
             if final_memory_probes[probed_mem_trial] in old_probe_list:
                 correct = 1
+                bonus_correct += 1
                 confidence = 'sure'
                 show_stacked_images(stacked_recog[probed_mem_trial] + [reward],duration=1)
             elif final_memory_probes[probed_mem_trial] in new_probe_list:
@@ -1284,6 +1304,7 @@ def get_memory_probe():
         if recogKeyList[1] in key: # 6
             if final_memory_probes[probed_mem_trial] in old_probe_list:
                 correct = 1
+                bonus_correct += 1
                 confidence = 'unsure'
                 show_stacked_images(stacked_recog[probed_mem_trial] + [reward],duration=1)
             elif final_memory_probes[probed_mem_trial] in new_probe_list:
@@ -1298,6 +1319,7 @@ def get_memory_probe():
                 show_stacked_images(stacked_recog[probed_mem_trial] + [no_reward],duration=1)
             elif final_memory_probes[probed_mem_trial] in new_probe_list:
                 correct = 1
+                bonus_correct += 1
                 confidence = 'unsure'
                 show_stacked_images(stacked_recog[probed_mem_trial] + [reward],duration=1)
         if recogKeyList[3] in key: # 8
@@ -1308,6 +1330,7 @@ def get_memory_probe():
                 show_stacked_images(stacked_recog[probed_mem_trial] + [no_reward],duration=1)
             elif final_memory_probes[probed_mem_trial] in new_probe_list:
                 correct = 1
+                bonus_correct += 1
                 confidence = 'sure'
                 show_stacked_images(stacked_recog[probed_mem_trial] + [reward],duration=1)
         probed_mem_trial +=1
@@ -1333,6 +1356,7 @@ def get_memory_probe():
             "reward":correct,
             "confidence":confidence,
             "TimeInBlock": island_clock.getTime(),
+            "Bonus":""
         })
     else:
         too_slow()
@@ -1433,6 +1457,7 @@ def pt2_source_memory():
             "reward":correct,
             "confidence":"",
             "TimeInBlock": island_clock.getTime(),
+            "Bonus":""
         })
         source_memory_trial +=1
         if source_memory_trial == len(stacked_source_memory):
@@ -1498,6 +1523,7 @@ def pt2_best_pirate():
             "reward":"",
             "confidence":"",
             "TimeInBlock": island_clock.getTime(),
+            "Bonus":""
         })
         best_pirate_trial +=1
         if best_pirate_trial == len(contexts):
@@ -1517,6 +1543,31 @@ def pt2_best_pirate():
 # How data is saved to CSV
 def save_data(participant_id, trials):
     """Save collected data to a CSV file, automatically detecting headers."""
+    global study,bonus_money
+    study.append({
+            "ID": "",
+            "TrialType":"EndStudy",
+            "BlockNum": "",
+            "contextOrder": "",
+            "reward_rate_red":"",
+            "reward_rate_white":"",
+            "reward_rate_black":"",
+            "probe_order": "",
+            "QuizFailedNum": "",
+            "TimeElapsed": experiment_clock.getTime(),
+            "key_press": "",
+            "RT": "",
+            "context": "",
+            "reward_prob_red":"",
+            "reward_prob_white":"",
+            "reward_prob_black":"",
+            "choice":"",
+            "probe":"",
+            "reward":"",
+            "confidence":"",
+            "TimeInBlock": "",
+            "Bonus":bonus_money
+        })
     folder_name = "data"
     os.makedirs(folder_name, exist_ok=True)  # Uses data directory and checks if it exists before adding
 
@@ -1611,7 +1662,7 @@ pt2_best_pirate()
 
 save_data(participant_id,study)
 
-show_text("Thank you for your participation in this expeirment. Please contact your experimenter to let them know that you are all done.")
+show_text(f"Thank you for your participation in this expeirment. You have collected ${bonus_money} in bonus payment. Please contact your experimenter to let them know that you are all done and do not exit out of this page.")
 
 win.close()
 core.quit()

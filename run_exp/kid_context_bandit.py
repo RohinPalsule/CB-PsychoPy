@@ -1276,7 +1276,7 @@ def pt2_memory_probes(choice_blocks=choice_blocks):
             else:
                 too_slow()
         get_memory_probe()
-    bonus_money = np.round(bonus_correct*0.05)
+    bonus_money = int(np.round(bonus_correct*0.05))
 
 def get_memory_probe():
     """Making the pt 2 probe memory questions"""

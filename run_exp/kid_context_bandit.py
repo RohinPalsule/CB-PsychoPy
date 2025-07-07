@@ -412,7 +412,7 @@ stacked_white_pirate = []
 stacked_black_pirate = []
 stacked_island_bye = []
 stacked_island_nopirate = []
-
+block_len_adjusted = 70
 for context_idx,context in enumerate(contexts):
     if context_idx == 0: # First context is 30 trials
         for trial_idx in range(first_block):
@@ -431,7 +431,7 @@ for context_idx,context in enumerate(contexts):
             stacked_island_bye.append([deck,context,bye_island])
             context_labels.append(context.split("contexts/context_")[-1].split(".png")[0])
     else:
-        for trial_idx in range(block_len): # Rest of the contexts are 40 trials
+        for trial_idx in range(first_block,block_len_adjusted): # Rest of the contexts are 40 trials
             stacked_planet_welcome.append([deck,context,ahoy,welcomeArray[context_idx]])
             stacked_island_nopirate.append([deck,context])
             stacked_all_pirates.append([deck,context,all_pirates])
@@ -446,6 +446,7 @@ for context_idx,context in enumerate(contexts):
             stacked_black_reward.append([deck,context,black_pirate,probe_ship,valid_probe_images[trial_idx],reward_imgs[3][trial_idx]])
             stacked_island_bye.append([deck,context,bye_island])
             context_labels.append(context.split("contexts/context_")[-1].split(".png")[0])
+        block_len_adjusted += 40
 
 
 # Part 2 stacks
@@ -1288,6 +1289,7 @@ def get_memory_probe():
     island_clock = core.Clock()
     win.flip()
     resp_key = event.waitKeys(keyList=recogKeyList,timeStamped=response_clock,maxWait=3)
+    choice = 'none' # If no response
     if resp_key:
         key,RT = resp_key[0] # RT used for data collection
         if recogKeyList[0] in key: # 5
@@ -1302,6 +1304,7 @@ def get_memory_probe():
                 confidence = 'sure'
                 show_stacked_images(stacked_recog[probed_mem_trial] + [no_reward],duration=1)
         if recogKeyList[1] in key: # 6
+            choice = 'unsure_old'
             if final_memory_probes[probed_mem_trial] in old_probe_list:
                 correct = 1
                 bonus_correct += 1
@@ -1385,6 +1388,7 @@ def pt2_source_memory():
     island_clock = core.Clock()
     win.flip()
     resp_key = event.waitKeys(keyList=source_key_list,timeStamped=response_clock,maxWait=3)
+    choice = 'none' # If no response
     if resp_key:
         key,RT = resp_key[0] # RT used for data collection
         if source_key_list[0] in key: # 1
@@ -1490,6 +1494,7 @@ def pt2_best_pirate():
     island_clock = core.Clock()
     win.flip()
     resp_key = event.waitKeys(keyList=keyList,timeStamped=response_clock,maxWait=2)
+    choice = "none" # No response
     if resp_key:
         key,RT = resp_key[0] # RT used for data collection
         if source_key_list[0] in key: # 1

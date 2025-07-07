@@ -1634,7 +1634,7 @@ learn_phase_loop()
 
 save_data(participant_id,study)
 
-show_text("You are all done with the first part of the study! Thank you for participating.\n\n\n\nPress the spacebar to exit")
+show_text("You are all done with the first part of the study! Thank you for participating.\n\n\n\nPress the spacebar to continue")
 take_break()
 
 show_multi_img_text([goal_summary,goal_summary2],image_paths=[tutorial_reward,tutorial_noreward],heights=[0.6,-0.3],img_pos=[0.1,-0.7],x=0.3,y=0.4)

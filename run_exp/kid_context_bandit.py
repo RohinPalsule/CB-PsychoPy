@@ -241,9 +241,11 @@ decay_lambda = config['params']['decay_lambda']
 drift_noise = config['params']['drift_noise']
 rotation_trials = config['params']['rotation_trials']
 deterministic_trials = config['params']['deterministic_trials']
-
-# Add bumped deterministic trials
 ctx_bump = config['params']['ctx_bump']
+
+# ------------------------- BELOW IS OLD CODE NEED TO REMOVE ------------------------------
+# Add bumped deterministic trials
+
 for i in range(len(deterministic_trials)):
     for j in range(1, ctx_bump):
         trial_to_add = deterministic_trials[i] + j
@@ -299,14 +301,34 @@ for trial_idx in range(num_trials):
 
             payout[bandit][trial_idx] = drifted
 
-# Convert to list of lists if needed
-payout_list = payout.tolist()
-
 probabilities = {
     1: payout[0] * 0.01,
     2: payout[1] * 0.01,
     3: payout[2] * 0.01
 }
+# ------------------------- ABOVE IS OLD CODE NEED TO REMOVE ------------------------------
+
+
+import pandas as pd
+
+# Load the CSV file
+payoutNum = np.random.randint(1,8)
+df = pd.read_csv(f'../run_exp/static/good_payouts/scaledpayout{payoutNum}.csv')  # Replace with your actual path
+
+# Convert to probability dict
+probabilities = {
+    1: df['Bandit_1'].to_numpy(),
+    2: df['Bandit_2'].to_numpy(),
+    3: df['Bandit_3'].to_numpy()
+}
+
+# Not needed but in case needed
+payout = {
+    1: probabilities[1] / 0.01,
+    2: probabilities[2] / 0.01,
+    3: probabilities[3] / 0.01
+}
+
 
 ifReward = {key: np.random.binomial(1, prob) for key, prob in probabilities.items()}
 
@@ -371,22 +393,22 @@ mem_probe_trials = mem_probe_trials - 1  # zero-indexing
 # Step 5: Compute choice trials (set difference)
 all_trials = np.arange(num_trials)
 choice_trials = np.setdiff1d(all_trials, mem_probe_trials)
-    
+
 # Context-based trial order
 
-contexts = [image_prefix + "contexts/context_coast.png",
-            image_prefix + "contexts/context_countryside.png",
-            image_prefix + "contexts/context_mountain.png",
-            image_prefix + "contexts/context_forest.png",
-            image_prefix + "contexts/context_highway.png",
-            image_prefix + "contexts/context_city.png"]
+contexts = [image_prefix + "contexts/context_coral_beach.png",
+            image_prefix + "contexts/context_sunleaf_forest.png",
+            image_prefix + "contexts/context_icecap_mountain.png",
+            image_prefix + "contexts/context_driftwood_beach.png",
+            image_prefix + "contexts/context_stonepine_forest.png",
+            image_prefix + "contexts/context_greenrock_mountain.png"]
 
-welcomeArray = [image_prefix + "travel/welcome_coast.png",
-                image_prefix + "travel/welcome_meadow.png",
-                image_prefix + "travel/welcome_mountain.png",
-                image_prefix + "travel/welcome_forest.png",
-                image_prefix + "travel/welcome_road.png",
-                image_prefix + "travel/welcome_city.png"]
+welcomeArray = [image_prefix + "travel/welcome_coral_beach.png",
+                image_prefix + "travel/welcome_sunleaf_forest.png",
+                image_prefix + "travel/welcome_icecap_mountain.png",
+                image_prefix + "travel/welcome_driftwood_beach.png",
+                image_prefix + "travel/welcome_stonepine_forest.png",
+                image_prefix + "travel/welcome_greenrock_mountain.png"]
 
 # Randomizing context and welcome messages to be the same
 indices = list(range(len(contexts)))
@@ -413,6 +435,7 @@ stacked_black_pirate = []
 stacked_island_bye = []
 stacked_island_nopirate = []
 block_len_adjusted = 70
+early_block = 30
 for context_idx,context in enumerate(contexts):
     if context_idx == 0: # First context is 30 trials
         for trial_idx in range(first_block):
@@ -447,6 +470,7 @@ for context_idx,context in enumerate(contexts):
             stacked_island_bye.append([deck,context,bye_island])
             context_labels.append(context.split("contexts/context_")[-1].split(".png")[0])
         block_len_adjusted += 40
+        early_block +=40
 
 
 # Part 2 stacks
@@ -463,8 +487,8 @@ stacked_seven_white_reward = []
 stacked_seven_black_reward = []
 stacked_seven_room_pirates = []
 
-source_memory_contexts = [image_prefix + "contexts/source_1_highway.png",image_prefix + "contexts/source_2_coast.png",image_prefix + "contexts/source_3_mountain.png",
-                          image_prefix + "contexts/source_4_forest.png",image_prefix + "contexts/source_5_city.png",image_prefix + "contexts/source_6_countryside.png"]
+source_memory_contexts = [image_prefix + "contexts/source_1_beach.png",image_prefix + "contexts/source_2_forest.png",image_prefix + "contexts/source_3_mountain.png",
+                          image_prefix + "contexts/source_4_beach.png",image_prefix + "contexts/source_5_forest.png",image_prefix + "contexts/source_6_mountain.png"]
 
 pt2_index = first_block + ((num_blocks-1) * block_len)
 
@@ -547,6 +571,7 @@ for valid_img_probe_num in valid_probe_images:
 study.append({
     "ID": participant_id,
     "TrialType":f"InitializeStudy",
+    "PayoutDistNum":payoutNum,
     "BlockNum": "",
     "contextOrder": context_labels, # List of context orders
     "reward_rate_red":probabilities[1].tolist(), # List of reward rates for red pirate and below is white and black
@@ -597,6 +622,7 @@ def show_text(text, image_path=None,x=1,y=1,height=0,img_pos = -0.3,text_height=
     study.append({
         "ID": "",
         "TrialType":f"Instruction_{text_index}",
+        "PayoutDistNum":"",
         "BlockNum": "",
         "contextOrder": "",
         "reward_rate_red":"",
@@ -640,6 +666,7 @@ def show_multi_img_text(texts=[], image_paths=None,x=1,y=1,heights=[],img_pos=[]
     study.append({
         "ID": "",
         "TrialType":f"Instruction_{text_index}",
+        "PayoutDistNum":"",
         "BlockNum": "",
         "contextOrder": "",
         "reward_rate_red":"",
@@ -689,6 +716,7 @@ def too_slow():
     study.append({
         "ID": "",
         "TrialType":f"time_out",
+        "PayoutDistNum":"",
         "BlockNum": "",
         "contextOrder": "",
         "reward_rate_red":"",
@@ -724,6 +752,7 @@ def travel_trial():
     study.append({
         "ID": "",
         "TrialType":f"new_island",
+        "PayoutDistNum":"",
         "BlockNum": "",
         "contextOrder": "",
         "reward_rate_red":"",
@@ -796,6 +825,7 @@ def run_quiz():
         study.append({
             "ID": "",
             "TrialType":f"quiz_complete",
+            "PayoutDistNum":"",
             "BlockNum": "",
             "contextOrder": "",
             "reward_rate_red":"",
@@ -919,6 +949,7 @@ def practice_pirate_loop(duration=3,setting = 'desert'):
         study.append({
             "ID": "",
             "TrialType":f"practice_pirate_{curr_prac_trial+1}",
+            "PayoutDistNum":"",
             "BlockNum": "",
             "contextOrder": "",
             "reward_rate_red":"",
@@ -969,6 +1000,7 @@ def practice_pirate_loop(duration=3,setting = 'desert'):
             study.append({
                 "ID": "",
                 "TrialType":f"practce_best_pirate",
+                "PayoutDistNum":"",
                 "BlockNum": "",
                 "contextOrder": "",
                 "reward_rate_red":"",
@@ -1006,6 +1038,7 @@ def practice_pirate_loop(duration=3,setting = 'desert'):
             study.append({
                 "ID": "",
                 "TrialType":f"practice_source_memory",
+                "PayoutDistNum":"",
                 "BlockNum": "",
                 "contextOrder": "",
                 "reward_rate_red":"",
@@ -1033,6 +1066,7 @@ def practice_pirate_loop(duration=3,setting = 'desert'):
         study.append({
                 "ID": "",
                 "TrialType":f"time_out",
+                "PayoutDistNum":"",
                 "BlockNum": "",
                 "contextOrder": "",
                 "reward_rate_red":"",
@@ -1094,6 +1128,7 @@ def learn_phase_loop():
         study.append({
             "ID": "",
             "TrialType":f"pirate_{curr_trial+1}",
+            "PayoutDistNum":"",
             "BlockNum": "",
             "contextOrder": "",
             "reward_rate_red":"",
@@ -1132,6 +1167,7 @@ def learn_phase_loop():
         study.append({
                 "ID": "",
                 "TrialType":f"time_out",
+                "PayoutDistNum":"",
                 "BlockNum": "",
                 "contextOrder": "",
                 "reward_rate_red":"",
@@ -1162,6 +1198,7 @@ def take_break():
     study.append({
         "ID": "",
         "TrialType":f"take_break",
+        "PayoutDistNum":"",
         "BlockNum": "",
         "contextOrder": "",
         "reward_rate_red":"",
@@ -1252,6 +1289,7 @@ def pt2_memory_probes(choice_blocks=choice_blocks):
                     study.append({
                         "ID": "",
                         "TrialType":f"pirate_{pt2_index+1}",
+                        "PayoutDistNum":"",
                         "BlockNum": "",
                         "contextOrder": "",
                         "reward_rate_red":"",
@@ -1340,6 +1378,7 @@ def get_memory_probe():
         study.append({
             "ID": "",
             "TrialType":f"pirate_recog",
+            "PayoutDistNum":"",
             "BlockNum": "",
             "contextOrder": "",
             "reward_rate_red":"",
@@ -1442,6 +1481,7 @@ def pt2_source_memory():
         study.append({
             "ID": "",
             "TrialType":f"source_memory",
+            "PayoutDistNum":"",
             "BlockNum": "",
             "contextOrder": "",
             "reward_rate_red":"",
@@ -1509,6 +1549,7 @@ def pt2_best_pirate():
         study.append({
             "ID": "",
             "TrialType":f"source_memory",
+            "PayoutDistNum":"",
             "BlockNum": "",
             "contextOrder": "",
             "reward_rate_red":"",
@@ -1552,6 +1593,7 @@ def save_data(participant_id, trials):
     study.append({
             "ID": "",
             "TrialType":"EndStudy",
+            "PayoutDistNum":"",
             "BlockNum": "",
             "contextOrder": "",
             "reward_rate_red":"",

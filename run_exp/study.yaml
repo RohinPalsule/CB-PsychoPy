@@ -24,7 +24,7 @@ params:
   TEXTBOX_WIDTH: 1.5
   num_bandits: 3
   first_block: 30
-  block_len: 40
+  block_len: 30
   num_blocks: 6
   init_payoff: [60, 30, 10]
   payoff_bounds: [5, 95]

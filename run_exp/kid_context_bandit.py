@@ -99,6 +99,9 @@ practice_probes_cavern = [
   "probes/probes-264.png",
   "probes/probes-265.png"
 ]
+
+response_check = []
+
 # Stacked images
 desert_welcome = [deck,desert_img,ahoy,desert_welcome_text]
 desert_pirates = [deck,desert_img,all_pirates]
@@ -233,7 +236,7 @@ num_bandits = config['params']['num_bandits']
 first_block = config['params']['first_block']
 block_len = config['params']['block_len']
 num_blocks = config['params']['num_blocks']
-num_trials = block_len * num_blocks * 2
+num_trials = block_len * num_blocks + 130 # 10 trials skipped
 init_payoff = config['params']['init_payoff']
 decayTheta = init_payoff.copy()
 payoff_bounds = config['params']['payoff_bounds']
@@ -308,18 +311,17 @@ probabilities = {
 }
 # ------------------------- ABOVE IS OLD CODE NEED TO REMOVE ------------------------------
 
-
 import pandas as pd
 
 # Load the CSV file
-payoutNum = np.random.randint(1,8)
-df = pd.read_csv(f'../run_exp/static/good_payouts/scaledpayout{payoutNum}.csv')  # Replace with your actual path
+payoutNum = np.random.randint(1,5)
+df = pd.read_csv(f'../run_exp/static/original_payouts/dmt-0{payoutNum}.csv',header=None)  # Replace with your actual path
 
 # Convert to probability dict
 probabilities = {
-    1: df['Bandit_1'].to_numpy(),
-    2: df['Bandit_2'].to_numpy(),
-    3: df['Bandit_3'].to_numpy()
+    1: df[0].to_numpy(),
+    2: df[1].to_numpy(),
+    3: df[2].to_numpy()
 }
 
 # Not needed but in case needed
@@ -328,7 +330,6 @@ payout = {
     2: probabilities[2] / 0.01,
     3: probabilities[3] / 0.01
 }
-
 
 ifReward = {key: np.random.binomial(1, prob) for key, prob in probabilities.items()}
 
@@ -340,7 +341,7 @@ reward_imgs = {
 # Valid probes (seen in task) and Invalid (foils during memory phase)
 valid_probe_images = []
 invalid_probe_images = []
-for i in range(1,231): # 230 trials (30 trials first block + 40 trials * 5 other blocks)
+for i in range(1,181): # 180 trials (30 trials * 6 blocks)
     if i < 10:   
         valid_probe_images.append(image_prefix + f"probes/probes-0{i}.png")
     else:
@@ -351,49 +352,65 @@ for i in range(231,256): # 25 trials (wrong probe trials during testing)
 random.shuffle(valid_probe_images)
 random.shuffle(invalid_probe_images)
 
-
 sample_window = 10
 mean_ct = 5
-min_ct = 2
+min_ct = 1
 max_ct = 8
 num_probes = sample_window * (num_blocks-1)
 num_invalid_probes = np.round(num_probes/5)
 num_probes = int(num_probes + num_invalid_probes)
-# Step 1: Generate exponentially-distributed choice_blocks
-log_rand = np.log(np.random.rand(num_probes))
+second_half_trials = np.arange(190, 310)  # 120 trials
+available_for_mem_probe = []
+
+for b in range(0, num_blocks):  
+    block_start = block_len * b
+    block_candidates = list(range(block_start, block_start + sample_window))
+    available_for_mem_probe.extend(block_candidates)
+
+# Group by block
+from collections import defaultdict
+block_to_candidates = defaultdict(list)
+
+for trial in available_for_mem_probe:
+    block = trial // block_len
+    block_to_candidates[block].append(trial)
+
+# Sample ~8-9 from each block
+valid_probe_trials = []
+for block in sorted(block_to_candidates.keys()):
+    trials_in_block = block_to_candidates[block]
+    n_to_sample = 9 if block < 5 else 5  # e.g., 5 from last block to make total = 50
+    sampled = np.random.choice(trials_in_block, size=n_to_sample, replace=False).tolist()
+    valid_probe_trials.extend(sampled)
+
+num_invalid_probes = 10
+num_total_probes = len(valid_probe_trials) + num_invalid_probes  # = 60
+
+log_rand = np.log(np.random.rand(num_total_probes))
 log_rand_div_mean_ct = log_rand / (1 / mean_ct)
 choice_blocks = np.ceil(log_rand_div_mean_ct) * -1 + min_ct
 choice_blocks = np.clip(choice_blocks, min_ct, max_ct).astype(int)
 
-# Step 2: Adjust until sum == num_trials/2 and all values are within bounds
-while (choice_blocks.sum() != num_trials // 2 or
-       np.any(choice_blocks < min_ct) or
+# Adjust to make sum exactly num of pt 2 trials (120)
+while (choice_blocks.sum() != 120 or
        np.any(choice_blocks > max_ct)):
 
-    # Random index to modify
-    ind = np.random.randint(0, num_probes)
-
-    # Increase or decrease based on current sum
-    delta = int(np.sign(choice_blocks.sum() - (num_trials // 2)))
+    ind = np.random.randint(0, num_total_probes)
+    delta = int(np.sign(choice_blocks.sum() - (120)))
     choice_blocks[ind] -= delta
-
-    # Clamp again
     choice_blocks = np.clip(choice_blocks, min_ct, max_ct)
 
-# Step 3: Subtract 1 from each (to leave space for a mem_trial) and add 10 to first
-choice_blocks = choice_blocks - 1
 choice_blocks[0] += 10
 
-# Step 4: Compute memory probe trial indices
-block_sizes = choice_blocks + 1
-cumsum_blocks = np.cumsum(block_sizes)
-mem_probe_trials = cumsum_blocks + (num_trials // 2)  # shift into 2nd half
-mem_probe_trials = mem_probe_trials - 1  # zero-indexing
+# # Step 4: Compute memory probe trial indices
+# block_sizes = choice_blocks + 1
+# cumsum_blocks = np.cumsum(block_sizes)
+# mem_probe_trials = cumsum_blocks + (190)  # shift into 2nd half
+# mem_probe_trials = mem_probe_trials - 1  # zero-indexing
 
-# Step 5: Compute choice trials (set difference)
-all_trials = np.arange(num_trials)
-choice_trials = np.setdiff1d(all_trials, mem_probe_trials)
-
+# # Step 5: Compute choice trials (set difference)
+# all_trials = np.arange(num_trials)
+# choice_trials = np.setdiff1d(all_trials, mem_probe_trials)
 # Context-based trial order
 
 contexts = [image_prefix + "contexts/context_coral_beach.png",
@@ -410,15 +427,6 @@ welcomeArray = [image_prefix + "travel/welcome_coral_beach.png",
                 image_prefix + "travel/welcome_stonepine_forest.png",
                 image_prefix + "travel/welcome_greenrock_mountain.png"]
 
-# Randomizing context and welcome messages to be the same
-indices = list(range(len(contexts)))
-random.shuffle(indices)
-
-response_check = []
-
-contexts = [contexts[i] for i in indices]
-welcomeArray = [welcomeArray[i] for i in indices]
-
 # Init main phase image stacks
 stacked_all_pirates = []
 stacked_red_remember = []
@@ -434,44 +442,26 @@ stacked_white_pirate = []
 stacked_black_pirate = []
 stacked_island_bye = []
 stacked_island_nopirate = []
-block_len_adjusted = 70
-early_block = 30
+prior_trial = 0
+trial_range = 30
 for context_idx,context in enumerate(contexts):
-    if context_idx == 0: # First context is 30 trials
-        for trial_idx in range(first_block):
-            stacked_planet_welcome.append([deck,context,ahoy,welcomeArray[context_idx]])
-            stacked_island_nopirate.append([deck,context])
-            stacked_all_pirates.append([deck,context,all_pirates])
-            stacked_red_pirate.append([deck,context,red_pirate])
-            stacked_red_remember.append([deck,context,red_pirate,probe_ship,valid_probe_images[trial_idx]])
-            stacked_red_reward.append([deck,context,red_pirate,probe_ship,valid_probe_images[trial_idx],reward_imgs[1][trial_idx]])
-            stacked_white_pirate.append([deck,context,white_pirate])
-            stacked_white_remember.append([deck,context,white_pirate,probe_ship,valid_probe_images[trial_idx]])
-            stacked_white_reward.append([deck,context,white_pirate,probe_ship,valid_probe_images[trial_idx],reward_imgs[2][trial_idx]])
-            stacked_black_pirate.append([deck,context,black_pirate])
-            stacked_black_remember.append([deck,context,black_pirate,probe_ship,valid_probe_images[trial_idx]])
-            stacked_black_reward.append([deck,context,black_pirate,probe_ship,valid_probe_images[trial_idx],reward_imgs[3][trial_idx]])
-            stacked_island_bye.append([deck,context,bye_island])
-            context_labels.append(context.split("contexts/context_")[-1].split(".png")[0])
-    else:
-        for trial_idx in range(first_block,block_len_adjusted): # Rest of the contexts are 40 trials
-            stacked_planet_welcome.append([deck,context,ahoy,welcomeArray[context_idx]])
-            stacked_island_nopirate.append([deck,context])
-            stacked_all_pirates.append([deck,context,all_pirates])
-            stacked_red_pirate.append([deck,context,red_pirate])
-            stacked_red_remember.append([deck,context,red_pirate,probe_ship,valid_probe_images[trial_idx]])
-            stacked_red_reward.append([deck,context,red_pirate,probe_ship,valid_probe_images[trial_idx],reward_imgs[1][trial_idx]])
-            stacked_white_pirate.append([deck,context,white_pirate])
-            stacked_white_remember.append([deck,context,white_pirate,probe_ship,valid_probe_images[trial_idx]])
-            stacked_white_reward.append([deck,context,white_pirate,probe_ship,valid_probe_images[trial_idx],reward_imgs[2][trial_idx]])
-            stacked_black_pirate.append([deck,context,black_pirate])
-            stacked_black_remember.append([deck,context,black_pirate,probe_ship,valid_probe_images[trial_idx]])
-            stacked_black_reward.append([deck,context,black_pirate,probe_ship,valid_probe_images[trial_idx],reward_imgs[3][trial_idx]])
-            stacked_island_bye.append([deck,context,bye_island])
-            context_labels.append(context.split("contexts/context_")[-1].split(".png")[0])
-        block_len_adjusted += 40
-        early_block +=40
-
+    for trial_idx in range(prior_trial,trial_range): # Rest of the contexts are 40 trials
+        stacked_planet_welcome.append([deck,context,ahoy,welcomeArray[context_idx]])
+        stacked_island_nopirate.append([deck,context])
+        stacked_all_pirates.append([deck,context,all_pirates])
+        stacked_red_pirate.append([deck,context,red_pirate])
+        stacked_red_remember.append([deck,context,red_pirate,probe_ship,valid_probe_images[trial_idx]])
+        stacked_red_reward.append([deck,context,red_pirate,probe_ship,valid_probe_images[trial_idx],reward_imgs[1][trial_idx]])
+        stacked_white_pirate.append([deck,context,white_pirate])
+        stacked_white_remember.append([deck,context,white_pirate,probe_ship,valid_probe_images[trial_idx]])
+        stacked_white_reward.append([deck,context,white_pirate,probe_ship,valid_probe_images[trial_idx],reward_imgs[2][trial_idx]])
+        stacked_black_pirate.append([deck,context,black_pirate])
+        stacked_black_remember.append([deck,context,black_pirate,probe_ship,valid_probe_images[trial_idx]])
+        stacked_black_reward.append([deck,context,black_pirate,probe_ship,valid_probe_images[trial_idx],reward_imgs[3][trial_idx]])
+        stacked_island_bye.append([deck,context,bye_island])
+        context_labels.append(context.split("contexts/context_")[-1].split(".png")[0])
+    prior_trial += 30
+    trial_range += 30
 
 # Part 2 stacks
 
@@ -490,10 +480,10 @@ stacked_seven_room_pirates = []
 source_memory_contexts = [image_prefix + "contexts/source_1_beach.png",image_prefix + "contexts/source_2_forest.png",image_prefix + "contexts/source_3_mountain.png",
                           image_prefix + "contexts/source_4_beach.png",image_prefix + "contexts/source_5_forest.png",image_prefix + "contexts/source_6_mountain.png"]
 
-pt2_index = first_block + ((num_blocks-1) * block_len)
+pt2_index = 0
 
 # Seventh Room
-for i in range(230,num_trials):
+for i in range(180,num_trials):
     stacked_seven_room.append([deck,context_seven])
     stacked_seven_room_pirates.append([deck,context_seven,all_pirates])
     stacked_seven_red.append([deck,context_seven,red_pirate])
@@ -1092,7 +1082,7 @@ def practice_pirate_loop(duration=3,setting = 'desert'):
 def learn_phase_loop():
     """For choosing the pirate, getting the probe, and seeing if there is a reward"""
     global curr_trial,study,island_clock
-    island_shift_indx = [0,30,70,110,150,190] # 0 index where contexts shift
+    island_shift_indx = [30,60,90,120,180] # 0 index where contexts shift
     if curr_trial in island_shift_indx:
         show_stacked_images(stacked_planet_welcome[curr_trial],duration=3) # Show welcome on first visit
     for img_path in stacked_all_pirates[curr_trial]: # Show all pirates and take responses
@@ -1222,29 +1212,67 @@ def take_break():
     })
 
 def init_responses():
-    global response_sorted,memory_probes,final_memory_probes,probed_context,final_probed_context,old_probe_list,new_probe_list
-    context_num = ["2","3","4","5","6"]
-    #Comment line below out
-    response_check = np.random.randint(1,2,480)
-    for i,t in enumerate([30, 70, 110, 150, 190]):
-        for added_trials in range(0,10):
-            response_sorted.append(response_check[t+added_trials])
-            memory_probes.append(valid_probe_images[t+added_trials])
-            probed_context.append(context_num[i])
-    for i,probe in enumerate(memory_probes):
-        if response_sorted[i]==1:
+    global response_sorted, memory_probes, final_memory_probes, probed_context, final_probed_context
+    global old_probe_list, new_probe_list, stacked_recog
+
+    # Reset all lists
+    response_sorted = []
+    memory_probes = []
+    probed_context = []
+    final_memory_probes = []
+    final_probed_context = []
+    old_probe_list = []
+    new_probe_list = []
+    stacked_recog = []
+
+    # --- PART 1: Select Valid Probes from 1st 10 trials of each block ---
+    available_for_mem_probe = []
+    for b in range(num_blocks):  
+        block_start = block_len * b
+        block_candidates = list(range(block_start, block_start + sample_window))
+        available_for_mem_probe.extend(block_candidates)
+
+    from collections import defaultdict
+    block_to_candidates = defaultdict(list)
+    for trial in available_for_mem_probe:
+        block = trial // block_len
+        block_to_candidates[block].append(trial)
+
+    # Sample ~8-9 trials from each block (sum = 50)
+    valid_probe_trials = []
+    for block in sorted(block_to_candidates.keys()):
+        trials_in_block = block_to_candidates[block]
+        n_to_sample = 9 if block < 5 else 5  # 5 from last block
+        sampled = np.random.choice(trials_in_block, size=n_to_sample, replace=False).tolist()
+        valid_probe_trials.extend(sampled)
+
+    # --- PART 2: Filter valid_probe_trials using response_check ---
+    # response_check = np.random.randint(1,2,180)
+    # COMMENT OUTTTTT
+    context_num = [str(i+1) for i in range(num_blocks)]  # e.g., ['1','2','3','4','5','6']
+    for trial_idx in valid_probe_trials:
+        response_sorted.append(response_check[trial_idx])
+        memory_probes.append(valid_probe_images[trial_idx])
+        probed_context.append(context_num[trial_idx // block_len])
+
+    for i, probe in enumerate(memory_probes):
+        if response_sorted[i] == 1:
             final_memory_probes.append(probe)
             final_probed_context.append(probed_context[i])
-    old_probe_list = final_memory_probes
+
+    old_probe_list = final_memory_probes.copy()
+
+    # --- PART 3: Add invalid probes if needed to reach 60 total ---
     invalid_idx = 0
-    while final_memory_probes != 60:
+    while len(final_memory_probes) < 60:
+        final_memory_probes.append(invalid_probe_images[invalid_idx])
+        final_probed_context.append("NA")
         new_probe_list.append(invalid_probe_images[invalid_idx])
-        final_memory_probes.append(invalid_probe_images[invalid_idx]) # Add 10 random new shuffled imgs and then any leftover if trials were skipped
-        final_probed_context.append("NA") # Not tested
-        invalid_idx +=1
-        if invalid_idx == 24: # In case they need more than 15 extra images (should not happen)
+        invalid_idx += 1
+        if invalid_idx >= len(invalid_probe_images):  # safety check
             break
 
+    # --- PART 4: Shuffle everything ---
     mem_idx = list(range(len(final_memory_probes)))
     random.shuffle(mem_idx)
 
@@ -1259,7 +1287,7 @@ def pt2_memory_probes(choice_blocks=choice_blocks):
     global pt2_index,study,bonus_money,bonus_correct
     for block in choice_blocks:
         for trial in range(block):
-            for img_path in stacked_seven_room_pirates[pt2_index-230]: # Show all pirates and take responses
+            for img_path in stacked_seven_room_pirates[pt2_index]: # Show all pirates and take responses
                 stim = visual.ImageStim(win, image=img_path,size=(1.2,1.2))
                 stim.draw()
             response_clock = core.Clock()
@@ -1271,20 +1299,20 @@ def pt2_memory_probes(choice_blocks=choice_blocks):
                 key,RT = resp_key[0] # RT used for data collection
                 if keyList[0] in key: # 1
                     choice = 'red_pirate'
-                    pirateChoice = stacked_seven_red[pt2_index-230]
-                    pirateReward = stacked_seven_red_reward[pt2_index-230]
+                    pirateChoice = stacked_seven_red[pt2_index]
+                    pirateReward = stacked_seven_red_reward[pt2_index]
                 if keyList[1] in key: # 2
                     choice = 'white_pirate'
-                    pirateChoice = stacked_seven_white[pt2_index-230]
-                    pirateReward = stacked_seven_white_reward[pt2_index-230]
+                    pirateChoice = stacked_seven_white[pt2_index]
+                    pirateReward = stacked_seven_white_reward[pt2_index]
                 if keyList[2] in key: # 3
                     choice = 'black_pirate'
-                    pirateChoice = stacked_seven_black[pt2_index-230]
-                    pirateReward = stacked_seven_black_reward[pt2_index-230]
+                    pirateChoice = stacked_seven_black[pt2_index]
+                    pirateReward = stacked_seven_black_reward[pt2_index]
                 if pt2_index < num_trials:
                     show_stacked_images(img_paths=pirateChoice,duration=1)
                     show_stacked_images(img_paths=pirateReward,duration=1)
-                    show_stacked_images(img_paths=stacked_seven_room[pt2_index-230],duration=1)
+                    show_stacked_images(img_paths=stacked_seven_room[pt2_index],duration=1)
                     pt2_index +=1
                     study.append({
                         "ID": "",
@@ -1315,7 +1343,7 @@ def pt2_memory_probes(choice_blocks=choice_blocks):
             else:
                 too_slow()
         get_memory_probe()
-    bonus_money = int(np.round(bonus_correct*0.05))
+    bonus_money = int(np.round(bonus_correct*0.25))
 
 def get_memory_probe():
     """Making the pt 2 probe memory questions"""
@@ -1407,13 +1435,15 @@ def get_memory_probe():
 stacked_source_memory = []
 stacked_source_memory_reward = []
 stacked_source_memory_no_reward = []
+filtered_context = []
 def source_memory_init():
     """Initializing source memory"""
-    global old_probe_list
+    global old_probe_list,filtered_context
     for i,probe in enumerate(old_probe_list):
         stacked_source_memory.append([source_question,probe_ship,probe]+source_memory_contexts)
         stacked_source_memory_reward.append([source_question,probe_ship,probe,reward]+source_memory_contexts)
         stacked_source_memory_no_reward.append([source_question,probe_ship,probe,no_reward]+source_memory_contexts)
+    filtered_context = [val for val in final_probed_context if val != "NA"]
 
 source_memory_trial = 0
 
@@ -1432,7 +1462,7 @@ def pt2_source_memory():
         key,RT = resp_key[0] # RT used for data collection
         if source_key_list[0] in key: # 1
             choice = 'context_1'
-            if final_probed_context[source_memory_trial]=='1':
+            if filtered_context[source_memory_trial]=='1':
                 correct = 1
                 show_stacked_images(stacked_source_memory[source_memory_trial] + [reward],duration=1)
             else:
@@ -1440,7 +1470,7 @@ def pt2_source_memory():
                 show_stacked_images(stacked_source_memory[source_memory_trial] + [no_reward],duration=1)
         if source_key_list[1] in key: # 2
             choice = 'context_2'
-            if final_probed_context[source_memory_trial]=='2':
+            if filtered_context[source_memory_trial]=='2':
                 correct = 1
                 show_stacked_images(stacked_source_memory[source_memory_trial] + [reward],duration=1)
             else:
@@ -1448,7 +1478,7 @@ def pt2_source_memory():
                 show_stacked_images(stacked_source_memory[source_memory_trial] + [no_reward],duration=1)
         if source_key_list[2] in key: # 3
             choice = 'context_3'
-            if final_probed_context[source_memory_trial]=='3':
+            if filtered_context[source_memory_trial]=='3':
                 correct = 1
                 show_stacked_images(stacked_source_memory[source_memory_trial] + [reward],duration=1)
             else:
@@ -1456,7 +1486,7 @@ def pt2_source_memory():
                 show_stacked_images(stacked_source_memory[source_memory_trial] + [no_reward],duration=1)
         if source_key_list[3] in key: # 4
             choice = 'context_4'
-            if final_probed_context[source_memory_trial]=='4':
+            if filtered_context[source_memory_trial]=='4':
                 correct = 1
                 show_stacked_images(stacked_source_memory[source_memory_trial] + [reward],duration=1)
             else:
@@ -1464,7 +1494,7 @@ def pt2_source_memory():
                 show_stacked_images(stacked_source_memory[source_memory_trial] + [no_reward],duration=1)
         if source_key_list[4] in key: # 5
             choice = 'context_5'
-            if final_probed_context[source_memory_trial]=='5':
+            if filtered_context[source_memory_trial]=='5':
                 correct = 1
                 show_stacked_images(stacked_source_memory[source_memory_trial] + [reward],duration=1)
             else:
@@ -1472,7 +1502,7 @@ def pt2_source_memory():
                 show_stacked_images(stacked_source_memory[source_memory_trial] + [no_reward],duration=1)
         if source_key_list[5] in key: # 6
             choice = 'context_6'
-            if final_probed_context[source_memory_trial]=='6':
+            if filtered_context[source_memory_trial]=='6':
                 correct = 1
                 show_stacked_images(stacked_source_memory[source_memory_trial] + [reward],duration=1)
             else:
@@ -1684,7 +1714,7 @@ save_data(participant_id,study)
 show_text("You are all done with the first part of the study! Thank you for participating.\n\n\n\nPress the spacebar to continue")
 take_break()
 
-show_multi_img_text([goal_summary,goal_summary2],image_paths=[tutorial_reward,tutorial_noreward],heights=[0.6,-0.3],img_pos=[0.1,-0.7],x=0.3,y=0.4)
+show_multi_img_text([goal_summary,goal_summary2,space_bar],image_paths=[tutorial_reward,tutorial_noreward],heights=[0.6,-0.1,-0.7],img_pos=[0.2,-0.4],x=0.3,y=0.4)
 
 show_text(how_to_pick_summary)
 

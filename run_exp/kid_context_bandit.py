@@ -1012,6 +1012,7 @@ def practice_pirate_loop(duration=3,setting = 'desert'):
                 "TimeInBlock": "",
                 "Bonus":""
             })
+            write_study()  
             stim = visual.ImageStim(win, image=source_practice,size=(1.2,1.2))
             stim.draw()
             win.flip()
@@ -1082,7 +1083,7 @@ def practice_pirate_loop(duration=3,setting = 'desert'):
 def learn_phase_loop():
     """For choosing the pirate, getting the probe, and seeing if there is a reward"""
     global curr_trial,study,island_clock
-    island_shift_indx = [30,60,90,120,180] # 0 index where contexts shift
+    island_shift_indx = [0,30,60,90,120,180] # 0 index where contexts shift
     if curr_trial in island_shift_indx:
         show_stacked_images(stacked_planet_welcome[curr_trial],duration=3) # Show welcome on first visit
     for img_path in stacked_all_pirates[curr_trial]: # Show all pirates and take responses
@@ -1140,6 +1141,7 @@ def learn_phase_loop():
             "TimeInBlock": island_clock.getTime(),
             "Bonus":""
         })
+        write_study()  
         curr_trial +=1 # Advance trial
         if curr_trial == first_block + (block_len * (num_blocks - 1)):
             show_stacked_images(stacked_island_bye[curr_trial-1],duration=1.5)
@@ -1339,6 +1341,7 @@ def pt2_memory_probes(choice_blocks=choice_blocks):
                         "TimeInBlock": island_clock.getTime(),
                         "Bonus":""
                     })
+                    write_study()  
                 else: pass
             else:
                 too_slow()
@@ -1428,6 +1431,7 @@ def get_memory_probe():
             "TimeInBlock": island_clock.getTime(),
             "Bonus":""
         })
+        write_study()  
     else:
         too_slow()
         probed_mem_trial +=1
@@ -1601,6 +1605,7 @@ def pt2_best_pirate():
             "TimeInBlock": island_clock.getTime(),
             "Bonus":""
         })
+        write_study()  
         best_pirate_trial +=1
         if best_pirate_trial == len(contexts):
             pass
@@ -1617,34 +1622,36 @@ def pt2_best_pirate():
             pt2_best_pirate()
 
 # How data is saved to CSV
-def save_data(participant_id, trials):
+def save_data(participant_id, trials,end=False):
     """Save collected data to a CSV file, automatically detecting headers."""
     global study,bonus_money
-    study.append({
-            "ID": "",
-            "TrialType":"EndStudy",
-            "PayoutDistNum":"",
-            "BlockNum": "",
-            "contextOrder": "",
-            "reward_rate_red":"",
-            "reward_rate_white":"",
-            "reward_rate_black":"",
-            "probe_order": "",
-            "QuizFailedNum": "",
-            "TimeElapsed": experiment_clock.getTime(),
-            "key_press": "",
-            "RT": "",
-            "context": "",
-            "reward_prob_red":"",
-            "reward_prob_white":"",
-            "reward_prob_black":"",
-            "choice":"",
-            "probe":"",
-            "reward":"",
-            "confidence":"",
-            "TimeInBlock": "",
-            "Bonus":bonus_money
-        })
+    if end:
+        study.append({
+                "ID": "",
+                "TrialType":"EndStudy",
+                "PayoutDistNum":"",
+                "BlockNum": "",
+                "contextOrder": "",
+                "reward_rate_red":"",
+                "reward_rate_white":"",
+                "reward_rate_black":"",
+                "probe_order": "",
+                "QuizFailedNum": "",
+                "TimeElapsed": experiment_clock.getTime(),
+                "key_press": "",
+                "RT": "",
+                "context": "",
+                "reward_prob_red":"",
+                "reward_prob_white":"",
+                "reward_prob_black":"",
+                "choice":"",
+                "probe":"",
+                "reward":"",
+                "confidence":"",
+                "TimeInBlock": "",
+                "Bonus":bonus_money
+            })
+    write_study()  
     folder_name = "data"
     os.makedirs(folder_name, exist_ok=True)  # Uses data directory and checks if it exists before adding
 
@@ -1706,7 +1713,9 @@ show_text(quiz_intro)
 run_quiz()
 
 show_text("Good job! You’re now ready to move on to the real game! Remember this game will be difficult but don't get discouraged and try your best!" + space_bar)
+
 save_data(participant_id,study)
+
 learn_phase_loop()
 
 save_data(participant_id,study)
@@ -1737,7 +1746,7 @@ show_text(pick_best_pirate + space_bar,height=0.45, image_path=pick_pirate_tutor
 
 pt2_best_pirate()
 
-save_data(participant_id,study)
+save_data(participant_id,study,end=True)
 
 show_text(f"Thank you for your participation in this expeirment. You have collected ${bonus_money} in bonus payment. Please contact your experimenter to let them know that you are all done and do not exit out of this page.")
 

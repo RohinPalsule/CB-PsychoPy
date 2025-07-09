@@ -1083,7 +1083,7 @@ def practice_pirate_loop(duration=3,setting = 'desert'):
 def learn_phase_loop():
     """For choosing the pirate, getting the probe, and seeing if there is a reward"""
     global curr_trial,study,island_clock
-    island_shift_indx = [0,30,60,90,120,180] # 0 index where contexts shift
+    island_shift_indx = [0,30,60,90,120,150] # 0 index where contexts shift
     if curr_trial in island_shift_indx:
         show_stacked_images(stacked_planet_welcome[curr_trial],duration=3) # Show welcome on first visit
     for img_path in stacked_all_pirates[curr_trial]: # Show all pirates and take responses

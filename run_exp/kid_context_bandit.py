@@ -1420,7 +1420,7 @@ def get_memory_probe():
             "TimeElapsed": experiment_clock.getTime(),
             "key_press": key,
             "RT": RT,
-            "context": final_probed_context[probed_mem_trial],
+            "context": final_probed_context[probed_mem_trial-1],
             "reward_prob_red":"",
             "reward_prob_white":"",
             "reward_prob_black":"",

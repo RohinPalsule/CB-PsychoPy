@@ -477,4 +477,4 @@ def init_responses():
 init_responses()
 print(len(old_probe_list))
 filtered_context = [val for val in final_probed_context if val != "NA"]
-print(len(filtered_context))
+print(final_probed_context)

@@ -413,17 +413,17 @@ choice_blocks[0] += 10
 # choice_trials = np.setdiff1d(all_trials, mem_probe_trials)
 # Context-based trial order
 
-contexts = [image_prefix + "contexts/context_coral_beach.png",
+contexts = [image_prefix + "contexts/context_driftwood_beach.png",
             image_prefix + "contexts/context_sunleaf_forest.png",
             image_prefix + "contexts/context_icecap_mountain.png",
-            image_prefix + "contexts/context_driftwood_beach.png",
+            image_prefix + "contexts/context_coral_beach.png",
             image_prefix + "contexts/context_stonepine_forest.png",
             image_prefix + "contexts/context_greenrock_mountain.png"]
 
-welcomeArray = [image_prefix + "travel/welcome_coral_beach.png",
+welcomeArray = [image_prefix + "travel/welcome_driftwood_beach.png",
                 image_prefix + "travel/welcome_sunleaf_forest.png",
                 image_prefix + "travel/welcome_icecap_mountain.png",
-                image_prefix + "travel/welcome_driftwood_beach.png",
+                image_prefix + "travel/welcome_coral_beach.png",
                 image_prefix + "travel/welcome_stonepine_forest.png",
                 image_prefix + "travel/welcome_greenrock_mountain.png"]
 
@@ -1212,10 +1212,11 @@ def take_break():
         "TimeInBlock": island_clock.getTime(),
         "Bonus":""
     })
-
+old_probe_list_shuffled = []
+new_probe_list_shuffled = []
 def init_responses():
     global response_sorted, memory_probes, final_memory_probes, probed_context, final_probed_context
-    global old_probe_list, new_probe_list, stacked_recog
+    global old_probe_list, new_probe_list, stacked_recog,old_probe_list_shuffled,new_probe_list_shuffled
 
     # Reset all lists
     response_sorted = []
@@ -1280,6 +1281,11 @@ def init_responses():
 
     final_memory_probes = [final_memory_probes[i] for i in mem_idx]
     final_probed_context = [final_probed_context[i] for i in mem_idx]
+    old_probe_set = set(old_probe_list)
+    new_probe_set = set(new_probe_list)
+
+    old_probe_list_shuffled = [probe for probe in final_memory_probes if probe in old_probe_set]
+    new_probe_list_shuffled = [probe for probe in final_memory_probes if probe in new_probe_set]
 
     for i in range(len(final_memory_probes)):
         stacked_recog.append([recog_question,probe_ship,final_memory_probes[i]])
@@ -1350,7 +1356,7 @@ def pt2_memory_probes(choice_blocks=choice_blocks):
 
 def get_memory_probe():
     """Making the pt 2 probe memory questions"""
-    global probed_mem_trial,final_memory_probes,old_probe_list,new_probe_list,study,bonus_correct
+    global probed_mem_trial,final_memory_probes,old_probe_list_shuffled,new_probe_list_shuffled,study,bonus_correct
     for img_path in stacked_recog[probed_mem_trial]: # Show all pirates and take responses
         stim = visual.ImageStim(win, image=img_path,size=(1.2,1.2))
         stim.draw()
@@ -1363,44 +1369,44 @@ def get_memory_probe():
         key,RT = resp_key[0] # RT used for data collection
         if recogKeyList[0] in key: # 5
             choice = 'sure_old'
-            if final_memory_probes[probed_mem_trial] in old_probe_list:
+            if final_memory_probes[probed_mem_trial] in old_probe_list_shuffled:
                 correct = 1
                 bonus_correct += 1
                 confidence = 'sure'
                 show_stacked_images(stacked_recog[probed_mem_trial] + [reward],duration=1)
-            elif final_memory_probes[probed_mem_trial] in new_probe_list:
+            elif final_memory_probes[probed_mem_trial] in new_probe_list_shuffled:
                 correct = 0
                 confidence = 'sure'
                 show_stacked_images(stacked_recog[probed_mem_trial] + [no_reward],duration=1)
         if recogKeyList[1] in key: # 6
             choice = 'unsure_old'
-            if final_memory_probes[probed_mem_trial] in old_probe_list:
+            if final_memory_probes[probed_mem_trial] in old_probe_list_shuffled:
                 correct = 1
                 bonus_correct += 1
                 confidence = 'unsure'
                 show_stacked_images(stacked_recog[probed_mem_trial] + [reward],duration=1)
-            elif final_memory_probes[probed_mem_trial] in new_probe_list:
+            elif final_memory_probes[probed_mem_trial] in new_probe_list_shuffled:
                 correct = 0
                 confidence = 'unsure'
                 show_stacked_images(stacked_recog[probed_mem_trial] + [no_reward],duration=1)
         if recogKeyList[2] in key: # 7
             choice = 'unsure_new'
-            if final_memory_probes[probed_mem_trial] in old_probe_list:
+            if final_memory_probes[probed_mem_trial] in old_probe_list_shuffled:
                 correct = 0
                 confidence = 'unsure'
                 show_stacked_images(stacked_recog[probed_mem_trial] + [no_reward],duration=1)
-            elif final_memory_probes[probed_mem_trial] in new_probe_list:
+            elif final_memory_probes[probed_mem_trial] in new_probe_list_shuffled:
                 correct = 1
                 bonus_correct += 1
                 confidence = 'unsure'
                 show_stacked_images(stacked_recog[probed_mem_trial] + [reward],duration=1)
         if recogKeyList[3] in key: # 8
             choice = 'sure_new'
-            if final_memory_probes[probed_mem_trial] in old_probe_list:
+            if final_memory_probes[probed_mem_trial] in old_probe_list_shuffled:
                 correct = 0
                 confidence = 'sure'
                 show_stacked_images(stacked_recog[probed_mem_trial] + [no_reward],duration=1)
-            elif final_memory_probes[probed_mem_trial] in new_probe_list:
+            elif final_memory_probes[probed_mem_trial] in new_probe_list_shuffled:
                 correct = 1
                 bonus_correct += 1
                 confidence = 'sure'
@@ -1437,23 +1443,19 @@ def get_memory_probe():
         probed_mem_trial +=1
             
 stacked_source_memory = []
-stacked_source_memory_reward = []
-stacked_source_memory_no_reward = []
 filtered_context = []
 def source_memory_init():
     """Initializing source memory"""
-    global old_probe_list,filtered_context
-    for i,probe in enumerate(old_probe_list):
+    global old_probe_list_shuffled,filtered_context
+    for i,probe in enumerate(old_probe_list_shuffled):
         stacked_source_memory.append([source_question,probe_ship,probe]+source_memory_contexts)
-        stacked_source_memory_reward.append([source_question,probe_ship,probe,reward]+source_memory_contexts)
-        stacked_source_memory_no_reward.append([source_question,probe_ship,probe,no_reward]+source_memory_contexts)
     filtered_context = [val for val in final_probed_context if val != "NA"]
 
 source_memory_trial = 0
 
 def pt2_source_memory():
     """Source memory trials in part 2"""
-    global stacked_source_memory,stacked_source_memory_reward,stacked_source_memory_no_reward,source_memory_trial
+    global stacked_source_memory,source_memory_trial
     for img_path in stacked_source_memory[source_memory_trial]: # Show all pirates and take responses
         stim = visual.ImageStim(win, image=img_path,size=(1.2,1.2))
         stim.draw()

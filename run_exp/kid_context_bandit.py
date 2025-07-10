@@ -207,6 +207,7 @@ q4 = "You should remember the island where a pirate robbed a ship.\n\n\n\nPress 
 #images day2
 example_recog = image_prefix + "tutorial/example_recog_trial.png"
 memory_reward = image_prefix + "tutorial/reward_small.png"
+reward_small = image_prefix + "rewards/reward_small.png"
 # text
 goal_summary = "In this part, like before, you get to pick which pirate you want to rob the next ship.\n\nIf the pirate is successful in robbing a ship, you get gold coins that look like this:"
 goal_summary2 = "If they were not successful in robbing the ship, then you will get no gold coins and you'll see a big red x like this:"
@@ -1250,7 +1251,7 @@ def init_responses():
         valid_probe_trials.extend(sampled)
 
     # --- PART 2: Filter valid_probe_trials using response_check ---
-    # response_check = np.random.randint(1,2,180)
+    response_check = np.random.randint(1,2,180)
     # COMMENT OUTTTTT
     context_num = [str(i+1) for i in range(num_blocks)]  # e.g., ['1','2','3','4','5','6']
     for trial_idx in valid_probe_trials:
@@ -1352,7 +1353,7 @@ def pt2_memory_probes(choice_blocks=choice_blocks):
             else:
                 too_slow()
         get_memory_probe()
-    bonus_money = int(np.round(bonus_correct*0.25))
+    bonus_money = int(np.round(bonus_correct))
 
 def get_memory_probe():
     """Making the pt 2 probe memory questions"""
@@ -1371,46 +1372,50 @@ def get_memory_probe():
             choice = 'sure_old'
             if final_memory_probes[probed_mem_trial] in old_probe_list_shuffled:
                 correct = 1
-                bonus_correct += 1
+                bonus_correct += 0.25
                 confidence = 'sure'
-                show_stacked_images(stacked_recog[probed_mem_trial] + [reward],duration=1)
+                show_stacked_images(stacked_recog[probed_mem_trial] + [reward_small],duration=1)
             elif final_memory_probes[probed_mem_trial] in new_probe_list_shuffled:
                 correct = 0
+                bonus_correct -= 0.25
                 confidence = 'sure'
                 show_stacked_images(stacked_recog[probed_mem_trial] + [no_reward],duration=1)
         if recogKeyList[1] in key: # 6
             choice = 'unsure_old'
             if final_memory_probes[probed_mem_trial] in old_probe_list_shuffled:
                 correct = 1
-                bonus_correct += 1
+                bonus_correct += 0.25
                 confidence = 'unsure'
-                show_stacked_images(stacked_recog[probed_mem_trial] + [reward],duration=1)
+                show_stacked_images(stacked_recog[probed_mem_trial] + [reward_small],duration=1)
             elif final_memory_probes[probed_mem_trial] in new_probe_list_shuffled:
                 correct = 0
+                bonus_correct -= 0.25
                 confidence = 'unsure'
                 show_stacked_images(stacked_recog[probed_mem_trial] + [no_reward],duration=1)
         if recogKeyList[2] in key: # 7
             choice = 'unsure_new'
             if final_memory_probes[probed_mem_trial] in old_probe_list_shuffled:
                 correct = 0
+                bonus_correct -= 0.25
                 confidence = 'unsure'
                 show_stacked_images(stacked_recog[probed_mem_trial] + [no_reward],duration=1)
             elif final_memory_probes[probed_mem_trial] in new_probe_list_shuffled:
                 correct = 1
-                bonus_correct += 1
+                bonus_correct += 0.25
                 confidence = 'unsure'
-                show_stacked_images(stacked_recog[probed_mem_trial] + [reward],duration=1)
+                show_stacked_images(stacked_recog[probed_mem_trial] + [reward_small],duration=1)
         if recogKeyList[3] in key: # 8
             choice = 'sure_new'
             if final_memory_probes[probed_mem_trial] in old_probe_list_shuffled:
                 correct = 0
+                bonus_correct -= 0.25
                 confidence = 'sure'
                 show_stacked_images(stacked_recog[probed_mem_trial] + [no_reward],duration=1)
             elif final_memory_probes[probed_mem_trial] in new_probe_list_shuffled:
                 correct = 1
-                bonus_correct += 1
+                bonus_correct += 0.25
                 confidence = 'sure'
-                show_stacked_images(stacked_recog[probed_mem_trial] + [reward],duration=1)
+                show_stacked_images(stacked_recog[probed_mem_trial] + [reward_small],duration=1)
         probed_mem_trial +=1
         study.append({
             "ID": "",
@@ -1569,7 +1574,7 @@ def pt2_best_pirate():
     response_clock = core.Clock()
     island_clock = core.Clock()
     win.flip()
-    resp_key = event.waitKeys(keyList=keyList,timeStamped=response_clock,maxWait=2)
+    resp_key = event.waitKeys(keyList=keyList,timeStamped=response_clock)
     choice = "none" # No response
     if resp_key:
         key,RT = resp_key[0] # RT used for data collection
@@ -1584,7 +1589,7 @@ def pt2_best_pirate():
             show_stacked_images(stacked_best_pirate[best_pirate_trial] + [black_best],duration=1, y = [0.1,0.1,-0.2,-0.2])
         study.append({
             "ID": "",
-            "TrialType":f"source_memory",
+            "TrialType":f"best_pirate",
             "PayoutDistNum":"",
             "BlockNum": "",
             "contextOrder": "",
@@ -1616,12 +1621,8 @@ def pt2_best_pirate():
             pt2_best_pirate()
     else:
         too_slow()
-        best_pirate_trial +=1
-        if best_pirate_trial == len(contexts):
-            pass
-        else: 
-            show_blank_screen()
-            pt2_best_pirate()
+        show_blank_screen()
+        pt2_best_pirate()
 
 # How data is saved to CSV
 def save_data(participant_id, trials,end=False):

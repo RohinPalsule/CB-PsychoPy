@@ -1384,7 +1384,7 @@ def pt2_memory_probes(choice_blocks=choice_blocks):
                     pt2_index +=1
                     study.append({
                         "ID": "",
-                        "TrialType":f"pirate_{pt2_index+1}",
+                        "TrialType":f"pt2_pirate_{pt2_index+1}",
                         "PayoutDistNum":"",
                         "BlockNum": "",
                         "contextOrder": "",

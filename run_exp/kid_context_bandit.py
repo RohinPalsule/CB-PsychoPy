@@ -23,9 +23,6 @@ monitor.saveMon()
 win = visual.Window(fullscr=True, color='white',allowStencil=True,units = "norm")
 experiment_clock = core.Clock()
 island_clock = core.Clock()
-# Debug and block length
-debug = config.get("debug", False)
-block_length = config["block_length_debug"] if debug else config["block_length"]
 
 # Bonus money init
 bonus_money = 0
@@ -78,7 +75,18 @@ bye_island = image_prefix + "travel/bye.png"
 
 best_pirate = image_prefix + "tutorial/prac_best_pirate.png"
 pt2_all_pirates = image_prefix + "tutorial/pirates_all_crop.png"
-source_practice = image_prefix + "tutorial/prac_source.png"
+source_practice = [image_prefix + "tutorial/prac_source4.png",
+                   image_prefix + "tutorial/prac_source1.png",
+                   image_prefix + "tutorial/prac_source7.png",
+                   image_prefix + "tutorial/prac_source10.png",
+                   image_prefix + "tutorial/prac_source2.png",
+                   image_prefix + "tutorial/prac_source9.png",
+                   image_prefix + "tutorial/prac_source6.png",
+                   image_prefix + "tutorial/prac_source3.png",
+                   image_prefix + "tutorial/prac_source5.png",
+                   image_prefix + "tutorial/prac_source8.png"]
+source_idx = [1,1,2,2,1,2,2,1,1,2]
+
 incorrect_quiz_feedback = ["That’s incorrect. You win bonus money by collecting gold coins.",
                            "That’s incorrect. Which pirate is the best may change during your time on the island.",
                            "That’s incorrect. How good a pirate is at robbing ships will change from island to island!",
@@ -983,10 +991,10 @@ def practice_pirate_loop(duration=3,setting = 'desert'):
                     show_text("That's correct! Red beard was the best." + space_bar)
                     wrong = 0
                 if keyList[1] in bestkeys: # 2
-                    show_text("That's incorrect! Red beard was the best."+ space_bar)
+                    show_text("That's incorrect! Red beard was the best. Try reading the instructions and doing the practice again!"+ space_bar)
                     wrong = 1
                 if keyList[2] in bestkeys: # 3
-                    show_text("That's incorrect! Red beard was the best."+ space_bar)
+                    show_text("That's incorrect! Red beard was the best. Try reading the instructions and doing the practice again!"+ space_bar)
                     wrong = 1
             study.append({
                 "ID": "",
@@ -1013,45 +1021,10 @@ def practice_pirate_loop(duration=3,setting = 'desert'):
                 "TimeInBlock": "",
                 "Bonus":""
             })
-            write_study()  
-            stim = visual.ImageStim(win, image=source_practice,size=(1.2,1.2))
-            stim.draw()
-            win.flip()
-            source_key = event.waitKeys(keyList=[keyList[0],keyList[1]])
-
-            if source_key:
-                sourcekey = source_key[0]
-                if keyList[0] in sourcekey: # 1
-                    show_text("That's incorrect! You saw this ship on the cavern island."+ space_bar)
-                    wrong = 1
-                if keyList[1] in sourcekey: # 2
-                    show_text("That's correct! You saw this ship on the cavern island." + space_bar)
-                    wrong = 0
-            study.append({
-                "ID": "",
-                "TrialType":f"practice_source_memory",
-                "PayoutDistNum":"",
-                "BlockNum": "",
-                "contextOrder": "",
-                "reward_rate_red":"",
-                "reward_rate_white":"",
-                "reward_rate_black":"",
-                "probe_order": "",
-                "QuizFailedNum": wrong,
-                "TimeElapsed": experiment_clock.getTime(),
-                "key_press": sourcekey,
-                "RT": "",
-                "context": "",
-                "reward_prob_red":"",
-                "reward_prob_white":"",
-                "reward_prob_black":"",
-                "choice":"",
-                "probe": "",
-                "reward":"",
-                "confidence":"",
-                "TimeInBlock": "",
-                "Bonus":""
-            })
+            write_study()
+            if wrong == 0:
+                practice_probe_recog()
+            else: repeat_instructions()   
     else:
         show_image(timeout_img,duration=2)
         practice_pirate_loop(setting=setting)
@@ -1080,7 +1053,90 @@ def practice_pirate_loop(duration=3,setting = 'desert'):
                 "TimeInBlock": "",
                 "Bonus":""
             })
+combined_wrong = 0
+practice_wrong_counter = 0
+def practice_probe_recog():
+    """Practicing the source memory in the tutorial"""
+    global combined_wrong,study,practice_wrong_counter
+    for idx,source_img in enumerate(source_practice):
+        stim = visual.ImageStim(win, image=source_img,size=(1.2,1.2))
+        stim.draw()
+        win.flip()
+        source_key = event.waitKeys(keyList=[keyList[0],keyList[1]])
+        if source_key:
+            sourcekey = source_key[0]
+            if source_idx[idx] == 1:
+                if keyList[0] in sourcekey: # 1
+                    show_text("That's correct! You saw this ship on the desert island." + space_bar)
+                    wrong = 0
+                if keyList[1] in sourcekey: # 2
+                    show_text("That's incorrect! You saw this ship on the desert island."+ space_bar)
+                    wrong = 1
+            elif source_idx[idx] == 2:
+                if keyList[0] in sourcekey: # 1
+                    show_text("That's incorrect! You saw this ship on the cavern island."+ space_bar)
+                    wrong = 1
+                if keyList[1] in sourcekey: # 2
+                    show_text("That's correct! You saw this ship on the cavern island." + space_bar)
+                    wrong = 0
+        combined_wrong += wrong
+        study.append({
+            "ID": "",
+            "TrialType":f"practice_source_memory_{idx}",
+            "PayoutDistNum":"",
+            "BlockNum": "",
+            "contextOrder": "",
+            "reward_rate_red":"",
+            "reward_rate_white":"",
+            "reward_rate_black":"",
+            "probe_order": "",
+            "QuizFailedNum": wrong,
+            "TimeElapsed": experiment_clock.getTime(),
+            "key_press": sourcekey,
+            "RT": "",
+            "context": "",
+            "reward_prob_red":"",
+            "reward_prob_white":"",
+            "reward_prob_black":"",
+            "choice":"",
+            "probe": "",
+            "reward":"",
+            "confidence":"",
+            "TimeInBlock": "",
+            "Bonus":""
+        })
+    if combined_wrong >= 5:
+        practice_wrong_counter += 1
+        if practice_wrong_counter == 4:
+            show_text("Unfortuantely you do not qualify for the remainder of the experiment. Please contact your experimenter to recieve your compensation up to this point.")
+            save_data()
+            core.quit()
+        show_text(f"You got {10-combined_wrong} out of 10 questions correct. Please reread the instructions and try again!" + space_bar)
+        repeat_instructions() 
+    else: show_text(f"You got {10-combined_wrong} out of 10 questions correct, you can move on to the next section!" + space_bar)
 
+def repeat_instructions():
+    """For repeating the instructions if they get either checks wrong"""
+    global curr_prac_trial,combined_wrong
+    curr_prac_trial = 0
+    combined_wrong = 0
+    show_text(welcome_txt)
+    show_text(different_places,image_path= all_contexts,height=0.3)
+    show_text(goal_of_game_1,image_path=tutorial_ship,height=0.3)
+    show_multi_img_text([goal_of_game_2a,goal_of_game_2b,goal_of_game_2c,goal_of_game_2d],image_paths=[tutorial_all_pirates,tutorial_reward,tutorial_noreward],heights=[0.8,0.25,-0.25,-0.8],img_pos=[0.5,0,-0.5],x=0.3,y=0.4)
+    show_text(probabilistic,image_path=tutorial_blue_pirate,height=0.5,keys=['1'])
+    practice_blue_loop()
+    show_text(blue_beard_outcome,keys=['space'])
+    practice_pirates()
+    practice_pirates(text=pick_pirate_again,switch='nowin')
+    show_text(text=time_out,height=0.5,image_path=timeout_img)
+    show_text(text=probe,height=0.6,image_path=example_probe,text_height=0.05)
+    show_text(text=changepoint)
+    show_text(text=drift,height=0.4,image_path=contingency,img_pos=-0.4)
+    show_text(text=summary)
+    show_stacked_images(desert_welcome,duration=3)
+    practice_pirate_loop()
+first_bonus = []
 def learn_phase_loop():
     """For choosing the pirate, getting the probe, and seeing if there is a reward"""
     global curr_trial,study,island_clock
@@ -1117,6 +1173,9 @@ def learn_phase_loop():
         show_stacked_images(img_paths=pirateProbe,duration=2)
         show_stacked_images(img_paths=pirateReward,duration=1)
         show_stacked_images(img_paths=stacked_island_nopirate[curr_trial],duration=1)
+        if ifReward[int(key)][curr_trial] == 1:
+            first_bonus.append(5)
+        else: first_bonus.append(0)
         study.append({
             "ID": "",
             "TrialType":f"pirate_{curr_trial+1}",
@@ -1353,7 +1412,7 @@ def pt2_memory_probes(choice_blocks=choice_blocks):
             else:
                 too_slow()
         get_memory_probe()
-    bonus_money = int(np.round(bonus_correct))
+    bonus_money = max(int(np.round(bonus_correct)),0) # Rounds payment to the dollar and then makes sure it is 0 or positive
 
 def get_memory_probe():
     """Making the pt 2 probe memory questions"""
@@ -1519,6 +1578,13 @@ def pt2_source_memory():
             else:
                 correct = 0
                 show_stacked_images(stacked_source_memory[source_memory_trial] + [no_reward],duration=1)
+        if correct == 0:
+            indices_of_5s = [i for i, val in enumerate(first_bonus) if val == 5]
+            if indices_of_5s:
+                # Pick a random index where there's a 5
+                random_index = random.choice(indices_of_5s)
+                # Remove the 5 at that index
+                del first_bonus[random_index]
         study.append({
             "ID": "",
             "TrialType":f"source_memory",
@@ -1623,12 +1689,17 @@ def pt2_best_pirate():
         too_slow()
         show_blank_screen()
         pt2_best_pirate()
-
+first_total = 0
 # How data is saved to CSV
 def save_data(participant_id, trials,end=False):
     """Save collected data to a CSV file, automatically detecting headers."""
-    global study,bonus_money
+    global study,bonus_money, first_total
     if end:
+        if len(first_bonus) >= 5: # Randomly sampling 5 items in the first bonus (5$ or 0$)
+            sampled_items = random.sample(first_bonus, 5)
+            first_total = sum(sampled_items)
+        else:
+            first_total = 0
         study.append({
                 "ID": "",
                 "TrialType":"EndStudy",
@@ -1652,7 +1723,7 @@ def save_data(participant_id, trials,end=False):
                 "reward":"",
                 "confidence":"",
                 "TimeInBlock": "",
-                "Bonus":bonus_money
+                "Bonus":[first_total,bonus_money]
             })
     write_study()  
     folder_name = "data"
@@ -1689,13 +1760,13 @@ show_multi_img_text([goal_of_game_2a,goal_of_game_2b,goal_of_game_2c,goal_of_gam
 
 show_text(probabilistic,image_path=tutorial_blue_pirate,height=0.5,keys=['1'])
 
-practice_blue_loop()
+# practice_blue_loop()
 
-show_text(blue_beard_outcome,keys=['space'])
+# show_text(blue_beard_outcome,keys=['space'])
 
-practice_pirates()
+# practice_pirates()
 
-practice_pirates(text=pick_pirate_again,switch='nowin')
+# practice_pirates(text=pick_pirate_again,switch='nowin')
 
 show_text(text=time_out,height=0.5,image_path=timeout_img)
 
@@ -1751,7 +1822,7 @@ pt2_best_pirate()
 
 save_data(participant_id,study,end=True)
 
-show_text(f"Thank you for your participation in this expeirment. You have collected ${bonus_money} in bonus payment. Please contact your experimenter to let them know that you are all done and do not exit out of this page.")
+show_text(f"Thank you for your participation in this expeirment. You have collected ${first_total} in bonus money from stealing the most gold from pirates and ${bonus_money} in bonus payment from remembering which ships you saw before. Please contact your experimenter to let them know that you are all done and do not exit out of this page.")
 
 win.close()
 core.quit()

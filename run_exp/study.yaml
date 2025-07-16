@@ -33,20 +33,6 @@ params:
   rotation_trials: [40, 80, 120, 160, 200, 240, 280, 320, 360, 400, 440]
   deterministic_trials: [30, 70, 110, 150, 190]
   ctx_bump: 2
-images:
-  land: "land.jpg"
-  dig: "dig.jpg"
-  space_treasure: "gems/100.jpg"
-  pink_gem: "pink_gem.jpg"
-  opening_img: "opening_img-01.jpg"
-  barrel_text: "barrel_text.jpg"
-  rocket_first: "rocket-01.jpg"
-  alien_intro: "aliens/alien_planet-125.jpg"
-  alien_practice: "aliens/alien_planet-124.jpg"
-  timeout: "time_out.jpg"
-  home_base: "home_base.jpg"
-  gem_value: "gems/100.jpg"
-
 ship_sequence:
   - "travel/ship_up.png"
   - "travel/ship_down.png"

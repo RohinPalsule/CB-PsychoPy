@@ -1756,7 +1756,9 @@ show_text(different_places,image_path= all_contexts,height=0.3)
 
 show_text(goal_of_game_1,image_path=tutorial_ship,height=0.3)
 
-show_multi_img_text([goal_of_game_2a,goal_of_game_2b,goal_of_game_2c,goal_of_game_2d],image_paths=[tutorial_all_pirates,tutorial_reward,tutorial_noreward],heights=[0.8,0.25,-0.25,-0.8],img_pos=[0.5,0,-0.5],x=0.3,y=0.4)
+show_text(goal_of_game_2a+space_bar,image_path=tutorial_all_pirates,height=0.5,img_pos=-0.3)
+
+show_multi_img_text([goal_of_game_2b,goal_of_game_2c,goal_of_game_2d],image_paths=[tutorial_reward,tutorial_noreward],heights=[0.7,0.0,-0.7],img_pos=[0.35,-0.35],x=0.3,y=0.4)
 
 show_text(probabilistic,image_path=tutorial_blue_pirate,height=0.5,keys=['1'])
 

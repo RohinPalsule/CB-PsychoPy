@@ -1760,13 +1760,13 @@ show_multi_img_text([goal_of_game_2a,goal_of_game_2b,goal_of_game_2c,goal_of_gam
 
 show_text(probabilistic,image_path=tutorial_blue_pirate,height=0.5,keys=['1'])
 
-# practice_blue_loop()
+practice_blue_loop()
 
-# show_text(blue_beard_outcome,keys=['space'])
+show_text(blue_beard_outcome,keys=['space'])
 
-# practice_pirates()
+practice_pirates()
 
-# practice_pirates(text=pick_pirate_again,switch='nowin')
+practice_pirates(text=pick_pirate_again,switch='nowin')
 
 show_text(text=time_out,height=0.5,image_path=timeout_img)
 

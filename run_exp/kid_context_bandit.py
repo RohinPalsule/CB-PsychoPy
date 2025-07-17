@@ -1245,7 +1245,69 @@ def learn_phase_loop():
 def take_break():
     """Breaks between islands"""
     global island_clock
-    show_text(text="Time to take a quick break! You have 2 minutes to rest, but you can move on sooner if you'd like."+space_bar,duration=120)
+    timer_text_stim = visual.TextStim(win, pos=(0, 0.6), height=0.07, color='black')
+    message_stim = visual.TextStim(
+        win,
+        text=(
+            "Great job! You just finished the first half of the experiment!\n\n"
+            "Please take a short break, up to 5 minutes -- you may use this time to use the restroom, "
+            "or have a quick drink or snack.\n\n"
+            "During the break, there will be a timer that shows how much time is left in your break.\n\n"
+            "After 30 seconds, you can press SPACE to continue if you want to continue without using the full 5 minute break."
+        ),
+        pos=(0, 0),
+        height=0.07,
+        wrapWidth=1.6,
+        color='black'
+    )
+
+    # Countdown parameters
+    break_duration = 300  # 5 minutes = 300 seconds
+    min_wait_time = 30    # Must wait 30 seconds before spacebar works
+
+    # Start timer
+    timer = core.Clock()
+
+    # Main break loop
+    while True:
+        elapsed = timer.getTime()
+        remaining = max(0, int(break_duration - elapsed))
+
+        # Format MM:SS
+        minutes = remaining // 60
+        seconds = remaining % 60
+        time_str = f"{minutes:02d}:{seconds:02d}"
+
+        # Update text
+        timer_text_stim.text = f"Time remaining: {time_str}"
+
+        # Draw both message and timer
+        message_stim.draw()
+        timer_text_stim.draw()
+
+        # Flip screen
+        win.flip()
+
+        if elapsed >= min_wait_time:
+            exit_stim = visual.TextStim(
+            win,
+            text=space_bar,
+            pos=(0, -0.6),
+            height=0.07,
+            wrapWidth=1.6,
+            color='black'
+            )
+            exit_stim.draw()
+        # Allow skip if after 30 seconds
+        keys = event.getKeys()
+        if 'space' in keys and elapsed >= min_wait_time:
+            win.flip()
+            break
+
+        # Auto-end after full 5 minutes
+        if elapsed >= break_duration:
+            win.flip()
+            break
     study.append({
         "ID": "",
         "TrialType":f"take_break",

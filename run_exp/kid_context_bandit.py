@@ -201,7 +201,8 @@ red_loss = "Oh no! This pirate did not succeed in robbing the ship."+ space_bar
 white_loss = "Oh no! This pirate did not succeed in robbing the ship."+ space_bar
 black_loss = "Oh no! This pirate did not succeed in robbing the ship."+ space_bar
 time_out = "If you don’t make your choice fast enough, you’ll have to wait a few seconds before you can make another one."+ space_bar
-probe = "Once you've chosen a pirate, you’ll be shown the ship they are robbing. You will never rob the same ship twice. Ships can be told apart from one another by the image on them. These are the goods that they sell. See, this ship has a travel mug on it.\n\nYou’ll have to remember which island you saw each ship on. You will win more gold coins and hence more bonus money if you remember correctly! To help you remember, you can imagine a story. For example, here, you could imagine a mug full of water in the desert. Or, as another example, if on the forest island, your pirate robbed a ship with an apple on it, you could imagine an apple falling from a tree in the forest."+ space_bar
+probe = "Once you've chosen a pirate, you’ll be shown the ship they are robbing. You will never rob the same ship twice. Ships can be told apart from one another by the image on them. These are the goods that they sell. See, this ship has a travel mug on it."+ space_bar
+probe2 = "You’ll have to remember which island you saw each ship on. You will win more gold coins and hence more bonus money if you remember correctly! To help you remember, you can imagine a story. For example, here, you could imagine a mug full of water in the desert. Or, as another example, if on the forest island, your pirate robbed a ship with an apple on it, you could imagine an apple falling from a tree in the forest."+ space_bar
 changepoint = "How successful a pirate is at robbing ships will depend on the island you’re on. A pirate may have visited this island many times before and gained a lot of practice robbing ships there.\n\nSo, they’re more likely to be successful than a pirate who has never visited the island before."+ space_bar
 drift = "How successful a pirate is at robbing ships can also change over the time spent on the island.\nShips may hear from islanders about the pirates coming and will improve their protections against the attack. This may make it harder to rob them.\nShips may also become lazy and weaken the strength of their protections. This may make it easier to rob them.\n\nThings are always changing on the high seas! So, try your best to pay attention!"+ space_bar
 summary = "Let's go over the instructions quickly again. You have two important things to do:\n\n 1. Pick the pirate who is the best at robbing ships on the current island. \n\n2. Remember on which island a ship was robbed. The amount of bonus money you can win depends on both.\n\n\nLet’s try a practice game. The game will start by showing you the pirates. First, pick a pirate using the 1, 2, 3 keys on your keyboard. When you are shown a ship, try to remember which island you’re on by making up a story.\n\nThis is just a practice game, so you’re not playing for money.\n\nGood luck! This game will be very difficult but try your best!"+ space_bar
@@ -234,8 +235,6 @@ begin_final = "Let's go over the important points again. Your job is to:\n\n\n\n
 source_memory = "Ok, you’re almost done! In this part, you’ll see a ship you saw yesterday, and you will have to pick the island on which you saw it using the keys 1, 2, 3, 4, 5, 6 on your keyboard. The number above each picture tells you which key to press to pick that island. Every time you pick the right island you’ll win some more bonus money, so try your best to remember!"
 pick_best_pirate = " Ok, this is your final game of the day. You’ll be shown an island, and you’ll have to pick the pirate you thought was the best at robbing ships on that island. You will use the 1, 2, 3 keys on your keyboard. Just like before, press '1' to choose red beard, '2' to choose white beard, and '3' to choose black beard. Once you pick a pirate, a gold box will surround your choice. Then, you’ll have to pick the pirate you thought was the second best at robbing ships on that island. Once you pick a pirate, a silver box will surround your choice. Then, you’ll move on to the next island."
 #/////////////////////////////////////////////////////////////////////////
-
-
 
 # Reward
 import numpy as np
@@ -1772,7 +1771,9 @@ practice_pirates(text=pick_pirate_again,switch='nowin')
 
 show_text(text=time_out,height=0.5,image_path=timeout_img)
 
-show_text(text=probe,height=0.6,image_path=example_probe,text_height=0.05)
+show_text(text=probe,height=0.5,image_path=example_probe)
+
+show_text(text=probe2,height=0.5,image_path=example_probe)
 
 show_text(text=changepoint)
 

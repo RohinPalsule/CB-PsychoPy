@@ -1241,8 +1241,37 @@ def learn_phase_loop():
                 "Bonus":""
             })
         learn_phase_loop()
-
 def take_break():
+    """Breaks between islands"""
+    global island_clock
+    show_text(text="Time to take a quick break! You have 2 minutes to rest, but you can move on sooner if you'd like."+space_bar,duration=120)
+    study.append({
+        "ID": "",
+        "TrialType":f"take_break",
+        "PayoutDistNum":"",
+        "BlockNum": "",
+        "contextOrder": "",
+        "reward_rate_red":"",
+        "reward_rate_white":"",
+        "reward_rate_black":"",
+        "probe_order": "",
+        "QuizFailedNum": "",
+        "TimeElapsed": experiment_clock.getTime(),
+        "key_press": "",
+        "RT": "",
+        "context": "",
+        "reward_prob_red":"",
+        "reward_prob_white":"",
+        "reward_prob_black":"",
+        "choice":"",
+        "probe": "",
+        "reward":"",
+        "confidence":"",
+        "TimeInBlock": island_clock.getTime(),
+        "Bonus":""
+    })
+
+def take_big_break():
     """Breaks between islands"""
     global island_clock
     timer_text_stim = visual.TextStim(win, pos=(0, 0.6), height=0.07, color='black')
@@ -1310,7 +1339,7 @@ def take_break():
             break
     study.append({
         "ID": "",
-        "TrialType":f"take_break",
+        "TrialType":f"big_break",
         "PayoutDistNum":"",
         "BlockNum": "",
         "contextOrder": "",
@@ -1333,8 +1362,10 @@ def take_break():
         "TimeInBlock": island_clock.getTime(),
         "Bonus":""
     })
+
 old_probe_list_shuffled = []
 new_probe_list_shuffled = []
+
 def init_responses():
     global response_sorted, memory_probes, final_memory_probes, probed_context, final_probed_context
     global old_probe_list, new_probe_list, stacked_recog,old_probe_list_shuffled,new_probe_list_shuffled
@@ -1860,7 +1891,7 @@ learn_phase_loop()
 save_data(participant_id,study)
 
 show_text("You are all done with the first part of the study! Thank you for participating.\n\n\n\nPress the spacebar to continue")
-take_break()
+take_big_break()
 
 show_multi_img_text([goal_summary,goal_summary2,space_bar],image_paths=[tutorial_reward,tutorial_noreward],heights=[0.6,-0.1,-0.7],img_pos=[0.2,-0.4],x=0.3,y=0.4)
 

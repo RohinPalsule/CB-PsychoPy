@@ -217,6 +217,7 @@ q4 = "You should remember the island where a pirate robbed a ship.\n\n\n\nPress 
 example_recog = image_prefix + "tutorial/example_recog_trial.png"
 memory_reward = image_prefix + "tutorial/reward_small.png"
 reward_small = image_prefix + "rewards/reward_small.png"
+reward_no_pt2 = image_prefix + "rewards/reward_no_pt2.png"
 # text
 goal_summary = "In this part, like before, you get to pick which pirate you want to rob the next ship.\n\nIf the pirate is successful in robbing a ship, you get gold coins that look like this:"
 goal_summary2 = "If they were not successful in robbing the ship, then you will get no gold coins and you'll see a big red x like this:"
@@ -226,7 +227,7 @@ how_to_pick_summary = "Also, just like before, you will use the 1,2,3 keys on yo
 
 final_place = "You’ve arrived at the final island of your journey! Unfortunately, it’s very foggy out, so you won’t be able to see it in the distance like the other islands you've visited.\n\nYou’ll still be deciding which pirate you want to rob a ship like before. However, because of the fog, you also won’t be able to see the ship.\n\nThis means you do not have to remember the ships you rob on this island.\n\nUnlike before, you won't be visiting multiple islands today. You will stay on this island for the entire game. This part will last ~30 minutes." + space_bar
 recognition_1 = "Sometimes you’ll be shown a ship, and you will be asked if you saw this ship on a past island. Here is an example of what you will see." + space_bar
-recognition_2 = "You will press the 5, 6, 7, 8 keys on your keyboard to respond.\n\nIf you are sure you saw the ship, press 5 on your keyboard.\n\nIf you think you saw it before but aren't sure, then press 6.\n\nIf you think you have not seen it before but aren't sure, then press 7.\n\nIf you are sure you did not see the ship before, then press 8." + space_bar
+recognition_2 = "You will press the 5, 6, 7, 8 keys on your keyboard to respond.\n\nIf you are sure you saw the ship, press 5 on your keyboard.\nIf you think you saw it before but aren't sure, then press 6.\nIf you think you have not seen it before but aren't sure, then press 7.\nIf you are sure you did not see the ship before, then press 8.\n\nYou will not see these trials everytime, but please be prepared to answer them. We recommend having your LEFT hand on the numbers 1-3 and your RIGHT hand on numbers 5-8." + space_bar
 recognition_3 = " If you remember correctly, then you’ll get a gold coin like this:"
 recognition_3b = "If you do not remember correctly, then you'll see a red x like this:"
 recognition_3c = "Importantly, when you are shown a ship, take the time to remind yourself which island you saw it on. This will help you in the next part of the study." + space_bar
@@ -1530,7 +1531,7 @@ def get_memory_probe():
                 correct = 0
                 bonus_correct -= 0.25
                 confidence = 'sure'
-                show_stacked_images(stacked_recog[probed_mem_trial] + [no_reward],duration=1)
+                show_stacked_images(stacked_recog[probed_mem_trial] + [reward_no_pt2],duration=1)
         if recogKeyList[1] in key: # 6
             choice = 'unsure_old'
             if final_memory_probes[probed_mem_trial] in old_probe_list_shuffled:
@@ -1542,14 +1543,14 @@ def get_memory_probe():
                 correct = 0
                 bonus_correct -= 0.25
                 confidence = 'unsure'
-                show_stacked_images(stacked_recog[probed_mem_trial] + [no_reward],duration=1)
+                show_stacked_images(stacked_recog[probed_mem_trial] + [reward_no_pt2],duration=1)
         if recogKeyList[2] in key: # 7
             choice = 'unsure_new'
             if final_memory_probes[probed_mem_trial] in old_probe_list_shuffled:
                 correct = 0
                 bonus_correct -= 0.25
                 confidence = 'unsure'
-                show_stacked_images(stacked_recog[probed_mem_trial] + [no_reward],duration=1)
+                show_stacked_images(stacked_recog[probed_mem_trial] + [reward_no_pt2],duration=1)
             elif final_memory_probes[probed_mem_trial] in new_probe_list_shuffled:
                 correct = 1
                 bonus_correct += 0.25
@@ -1561,7 +1562,7 @@ def get_memory_probe():
                 correct = 0
                 bonus_correct -= 0.25
                 confidence = 'sure'
-                show_stacked_images(stacked_recog[probed_mem_trial] + [no_reward],duration=1)
+                show_stacked_images(stacked_recog[probed_mem_trial] + [reward_no_pt2],duration=1)
             elif final_memory_probes[probed_mem_trial] in new_probe_list_shuffled:
                 correct = 1
                 bonus_correct += 0.25
@@ -1842,70 +1843,70 @@ def save_data(participant_id, trials,end=False):
 
 # Main experiment flow
 
-show_text(welcome_txt)
+# show_text(welcome_txt)
 
-show_text(different_places,image_path= all_contexts,height=0.3)
+# show_text(different_places,image_path= all_contexts,height=0.3)
 
-show_text(goal_of_game_1,image_path=tutorial_ship,height=0.3)
+# show_text(goal_of_game_1,image_path=tutorial_ship,height=0.3)
 
-show_text(goal_of_game_2a+space_bar,image_path=tutorial_all_pirates,height=0.5,img_pos=-0.3)
+# show_text(goal_of_game_2a+space_bar,image_path=tutorial_all_pirates,height=0.5,img_pos=-0.3)
 
-show_multi_img_text([goal_of_game_2b,goal_of_game_2c,goal_of_game_2d],image_paths=[tutorial_reward,tutorial_noreward],heights=[0.7,0.0,-0.7],img_pos=[0.35,-0.35],x=0.3,y=0.4)
+# show_multi_img_text([goal_of_game_2b,goal_of_game_2c,goal_of_game_2d],image_paths=[tutorial_reward,tutorial_noreward],heights=[0.7,0.0,-0.7],img_pos=[0.35,-0.35],x=0.3,y=0.4)
 
-show_text(probabilistic,image_path=tutorial_blue_pirate,height=0.5,keys=['1'])
+# show_text(probabilistic,image_path=tutorial_blue_pirate,height=0.5,keys=['1'])
 
-practice_blue_loop()
+# practice_blue_loop()
 
-show_text(blue_beard_outcome,keys=['space'])
+# show_text(blue_beard_outcome,keys=['space'])
 
-practice_pirates()
+# practice_pirates()
 
-practice_pirates(text=pick_pirate_again,switch='nowin')
+# practice_pirates(text=pick_pirate_again,switch='nowin')
 
-show_text(text=time_out,height=0.5,image_path=timeout_img)
+# show_text(text=time_out,height=0.5,image_path=timeout_img)
 
-show_text(text=probe,height=0.5,image_path=example_probe)
+# show_text(text=probe,height=0.5,image_path=example_probe)
 
-show_text(text=probe2,height=0.5,image_path=example_probe)
+# show_text(text=probe2,height=0.5,image_path=example_probe)
 
-show_text(text=changepoint)
+# show_text(text=changepoint)
 
-show_text(text=drift,height=0.4,image_path=contingency,img_pos=-0.4)
+# show_text(text=drift,height=0.4,image_path=contingency,img_pos=-0.4)
 
-show_text(text=summary)
+# show_text(text=summary)
 
-show_stacked_images(desert_welcome,duration=3)
+# show_stacked_images(desert_welcome,duration=3)
 
-practice_pirate_loop()
+# practice_pirate_loop()
 
-show_text(quiz_intro)
+# show_text(quiz_intro)
 
-run_quiz()
+# run_quiz()
 
-show_text("Good job! You’re now ready to move on to the real game! Remember this game will be difficult but don't get discouraged and try your best!" + space_bar)
+# show_text("Good job! You’re now ready to move on to the real game! Remember this game will be difficult but don't get discouraged and try your best!" + space_bar)
 
-save_data(participant_id,study)
+# save_data(participant_id,study)
 
-learn_phase_loop()
+# learn_phase_loop()
 
-save_data(participant_id,study)
+# save_data(participant_id,study)
 
-show_text("You are all done with the first part of the study! Thank you for participating.\n\n\n\nPress the spacebar to continue")
-take_big_break()
+# show_text("You are all done with the first part of the study! Thank you for participating.\n\n\n\nPress the spacebar to continue")
+# take_big_break()
 
-show_multi_img_text([goal_summary,goal_summary2,space_bar],image_paths=[tutorial_reward,tutorial_noreward],heights=[0.6,-0.1,-0.7],img_pos=[0.2,-0.4],x=0.3,y=0.4)
+# show_multi_img_text([goal_summary,goal_summary2,space_bar],image_paths=[tutorial_reward,tutorial_noreward],heights=[0.6,-0.1,-0.7],img_pos=[0.2,-0.4],x=0.3,y=0.4)
 
-show_text(how_to_pick_summary)
+# show_text(how_to_pick_summary)
 
-show_text(text=recognition_1,image_path=example_recog,height=0.5)
+# show_text(text=recognition_1,image_path=example_recog,height=0.5)
 
-show_text(text=recognition_2,image_path=example_recog,height=0.4,img_pos=-0.5,text_height=0.06)
+# show_text(text=recognition_2,image_path=example_recog,height=0.4,img_pos=-0.5,text_height=0.06)
 
-show_multi_img_text(texts=[recognition_3,recognition_3b,recognition_3c],image_paths=[memory_reward,tutorial_noreward],heights=[0.6,0.1,-0.6],img_pos=[0.35,-0.20],x=0.3,y=0.4)
+# show_multi_img_text(texts=[recognition_3,recognition_3b,recognition_3c],image_paths=[memory_reward,tutorial_noreward],heights=[0.6,0.1,-0.6],img_pos=[0.35,-0.20],x=0.3,y=0.4)
 
-show_text(begin_final)
+# show_text(begin_final)
 init_responses()
-pt2_memory_probes(choice_blocks=choice_blocks)
+# pt2_memory_probes(choice_blocks=choice_blocks)
 
 show_text(text=source_memory + space_bar,height=0.5,image_path=pt2_source_memory_img,img_pos=-0.4)
 

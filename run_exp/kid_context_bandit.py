@@ -1279,6 +1279,7 @@ def take_break():
     """Breaks between islands"""
     global island_clock
     show_text(text="Time to take a quick break! You have 2 minutes to rest, but you can move on sooner if you'd like."+space_bar,duration=120)
+    show_text(text="Task is resuming now!",duration=1)
     study.append({
         "ID": "",
         "TrialType":f"take_break",

@@ -702,18 +702,70 @@ def show_image(img_path, duration=1.5):
     win.flip()
     core.wait(duration)
 
-def show_stacked_images(img_paths = [], duration=3,y=None):
+def show_stacked_images(img_paths = [], duration=3,y=None, data=None):
     """Displays an image for a given duration"""
     if y:
         for i,img_path in enumerate(img_paths):
             stim = visual.ImageStim(win, image=img_path,size=(1.2,1.2),pos=(0,y[i]))
             stim.draw()
         win.flip()
+        if data:
+            study.append({
+                "ID": "",
+                "TrialType":data,
+                "PayoutDistNum":"",
+                "BlockNum": "",
+                "contextOrder": "",
+                "reward_rate_red":"",
+                "reward_rate_white":"",
+                "reward_rate_black":"",
+                "probe_order": "",
+                "QuizFailedNum": "",
+                "TimeElapsed": experiment_clock.getTime(),
+                "key_press": "",
+                "RT": "",
+                "context": "",
+                "reward_prob_red":"",
+                "reward_prob_white":"",
+                "reward_prob_black":"",
+                "choice":"",
+                "probe":"",
+                "reward":"",
+                "confidence":"",
+                "TimeInBlock": "",
+                "Bonus":""
+            })
     else:
         for img_path in img_paths:
             stim = visual.ImageStim(win, image=img_path,size=(1.2,1.2),pos=(0,0))
             stim.draw()
         win.flip()
+        if data:
+            study.append({
+                "ID": "",
+                "TrialType":data,
+                "PayoutDistNum":"",
+                "BlockNum": "",
+                "contextOrder": "",
+                "reward_rate_red":"",
+                "reward_rate_white":"",
+                "reward_rate_black":"",
+                "probe_order": "",
+                "QuizFailedNum": "",
+                "TimeElapsed": experiment_clock.getTime(),
+                "key_press": "",
+                "RT": "",
+                "context": "",
+                "reward_prob_red":"",
+                "reward_prob_white":"",
+                "reward_prob_black":"",
+                "choice":"",
+                "probe":"",
+                "reward":"",
+                "confidence":"",
+                "TimeInBlock": "",
+                "Bonus":""
+            })
     core.wait(duration)
 
 # Timeout image for 2 seconds
@@ -944,10 +996,6 @@ def practice_pirate_loop(duration=3,setting = 'desert'):
                 pirateChoice = cavern_black
                 pirateProbe = cavern_black_remember[curr_prac_trial-5]
                 pirateReward = cavern_black_reward[curr_prac_trial-5]
-        show_stacked_images(img_paths=pirateChoice,duration=1)
-        show_stacked_images(img_paths=pirateProbe,duration=2)
-        show_stacked_images(img_paths=pirateReward,duration=1)
-        show_stacked_images(img_paths=[deck,set_img],duration=1)
         if curr_prac_trial < 5:
             trial_num = curr_prac_trial
         else:
@@ -977,6 +1025,11 @@ def practice_pirate_loop(duration=3,setting = 'desert'):
             "TimeInBlock": "",
             "Bonus":""
         })
+        show_stacked_images(img_paths=pirateChoice,duration=1)
+        show_stacked_images(img_paths=pirateProbe,duration=2,data='practice_probe_appear')
+        show_stacked_images(img_paths=pirateReward,duration=1,data='reward_appear')
+        show_stacked_images(img_paths=[deck,set_img],duration=1)
+        
         curr_prac_trial +=1
         if curr_prac_trial < 5:
             practice_pirate_loop()
@@ -1176,13 +1229,6 @@ def learn_phase_loop():
             pirateChoice = stacked_black_pirate[curr_trial]
             pirateProbe = stacked_black_remember[curr_trial]
             pirateReward = stacked_black_reward[curr_trial]
-        show_stacked_images(img_paths=pirateChoice,duration=1)
-        show_stacked_images(img_paths=pirateProbe,duration=2)
-        show_stacked_images(img_paths=pirateReward,duration=1)
-        show_stacked_images(img_paths=stacked_island_nopirate[curr_trial],duration=1)
-        if ifReward[int(key)][curr_trial] == 1:
-            first_bonus.append(5)
-        else: first_bonus.append(0)
         study.append({
             "ID": "",
             "TrialType":f"pirate_{curr_trial+1}",
@@ -1208,6 +1254,14 @@ def learn_phase_loop():
             "TimeInBlock": island_clock.getTime(),
             "Bonus":""
         })
+        show_stacked_images(img_paths=pirateChoice,duration=1)
+        show_stacked_images(img_paths=pirateProbe,duration=2,data=f'display_probe_{curr_trial+1}')
+        show_stacked_images(img_paths=pirateReward,duration=1,data=f'display_reward_{curr_trial+1}')
+        show_stacked_images(img_paths=stacked_island_nopirate[curr_trial],duration=1)
+        if ifReward[int(key)][curr_trial] == 1:
+            first_bonus.append(5)
+        else: first_bonus.append(0)
+        
         write_study()  
         curr_trial +=1 # Advance trial
         if curr_trial == first_block + (block_len * (num_blocks - 1)):
@@ -1504,12 +1558,7 @@ def pt2_memory_probes(choice_blocks=choice_blocks):
                     choice = 'black_pirate'
                     pirateChoice = stacked_seven_black[pt2_index]
                     pirateReward = stacked_seven_black_reward[pt2_index]
-                if pt2_index < num_trials:
-                    show_stacked_images(img_paths=pirateChoice,duration=1)
-                    show_stacked_images(img_paths=pirateReward,duration=1)
-                    show_stacked_images(img_paths=stacked_seven_room[pt2_index],duration=1)
-                    
-                    study.append({
+                study.append({
                         "ID": "",
                         "TrialType":f"pt2_pirate_{pt2_index+1}",
                         "PayoutDistNum":"",
@@ -1534,6 +1583,10 @@ def pt2_memory_probes(choice_blocks=choice_blocks):
                         "TimeInBlock": island_clock.getTime(),
                         "Bonus":""
                     })
+                if pt2_index < num_trials:
+                    show_stacked_images(img_paths=pirateChoice,duration=1)
+                    show_stacked_images(img_paths=pirateReward,duration=1,data=f'pt2_display_reward_{pt2_index+1}')
+                    show_stacked_images(img_paths=stacked_seven_room[pt2_index],duration=1)
                     pt2_index +=1
                     write_study()  
                 else: pass
@@ -1587,52 +1640,51 @@ def get_memory_probe():
                 correct = 1
                 bonus_correct += 0.25
                 confidence = 'sure'
-                show_stacked_images(stacked_recog[probed_mem_trial] + [reward_small],duration=1)
+                is_there_reward = True
             elif final_memory_probes[probed_mem_trial] in new_probe_list_shuffled:
                 correct = 0
                 bonus_correct -= 0.25
                 confidence = 'sure'
-                show_stacked_images(stacked_recog[probed_mem_trial] + [reward_no_pt2],duration=1)
+                is_there_reward = False
         if recogKeyList[1] in key: # 6
             choice = 'unsure_old'
             if final_memory_probes[probed_mem_trial] in old_probe_list_shuffled:
                 correct = 1
                 bonus_correct += 0.25
                 confidence = 'unsure'
-                show_stacked_images(stacked_recog[probed_mem_trial] + [reward_small],duration=1)
+                is_there_reward = True
             elif final_memory_probes[probed_mem_trial] in new_probe_list_shuffled:
                 correct = 0
                 bonus_correct -= 0.25
                 confidence = 'unsure'
-                show_stacked_images(stacked_recog[probed_mem_trial] + [reward_no_pt2],duration=1)
+                is_there_reward = False
         if recogKeyList[2] in key: # 7
             choice = 'unsure_new'
             if final_memory_probes[probed_mem_trial] in old_probe_list_shuffled:
                 correct = 0
                 bonus_correct -= 0.25
                 confidence = 'unsure'
-                show_stacked_images(stacked_recog[probed_mem_trial] + [reward_no_pt2],duration=1)
+                is_there_reward = False
             elif final_memory_probes[probed_mem_trial] in new_probe_list_shuffled:
                 correct = 1
                 bonus_correct += 0.25
                 confidence = 'unsure'
-                show_stacked_images(stacked_recog[probed_mem_trial] + [reward_small],duration=1)
+                is_there_reward = True
         if recogKeyList[3] in key: # 8
             choice = 'sure_new'
             if final_memory_probes[probed_mem_trial] in old_probe_list_shuffled:
                 correct = 0
                 bonus_correct -= 0.25
                 confidence = 'sure'
-                show_stacked_images(stacked_recog[probed_mem_trial] + [reward_no_pt2],duration=1)
+                is_there_reward = False
             elif final_memory_probes[probed_mem_trial] in new_probe_list_shuffled:
                 correct = 1
                 bonus_correct += 0.25
                 confidence = 'sure'
-                show_stacked_images(stacked_recog[probed_mem_trial] + [reward_small],duration=1)
-        probed_mem_trial +=1
+                is_there_reward = True
         study.append({
             "ID": "",
-            "TrialType":f"pirate_recog",
+            "TrialType":f"pirate_recog_{probed_mem_trial+1}",
             "PayoutDistNum":"",
             "BlockNum": "",
             "contextOrder": "",
@@ -1644,7 +1696,7 @@ def get_memory_probe():
             "TimeElapsed": experiment_clock.getTime(),
             "key_press": key,
             "RT": RT,
-            "context": final_probed_context[probed_mem_trial-1],
+            "context": final_probed_context[probed_mem_trial],
             "reward_prob_red":"",
             "reward_prob_white":"",
             "reward_prob_black":"",
@@ -1655,11 +1707,17 @@ def get_memory_probe():
             "TimeInBlock": island_clock.getTime(),
             "Bonus":""
         })
+        if is_there_reward:
+            show_stacked_images(stacked_recog[probed_mem_trial] + [reward_small],duration=1,data=f'display_memoryprobe_reward_{probed_mem_trial+1}')
+        else:
+            show_stacked_images(stacked_recog[probed_mem_trial] + [reward_no_pt2],duration=1,data=f'display_memoryprobe_reward_{probed_mem_trial+1}')
+        probed_mem_trial +=1
+        
         write_study()  
     else:
         study.append({
             "ID": "",
-            "TrialType":f"pirate_recog",
+            "TrialType":f"pirate_recog_{probed_mem_trial+1}",
             "PayoutDistNum":"",
             "BlockNum": "",
             "contextOrder": "",
@@ -1713,60 +1771,53 @@ def pt2_source_memory():
             choice = 'context_1'
             if filtered_context[source_memory_trial]=='1':
                 correct = 1
-                show_stacked_images(stacked_source_memory[source_memory_trial] + [reward],duration=1)
+                context_reward = True
             else:
                 correct = 0
-                show_stacked_images(stacked_source_memory[source_memory_trial] + [no_reward],duration=1)
+                context_reward = False
         if source_key_list[1] in key: # 2
             choice = 'context_2'
             if filtered_context[source_memory_trial]=='2':
                 correct = 1
-                show_stacked_images(stacked_source_memory[source_memory_trial] + [reward],duration=1)
+                context_reward = True
             else:
                 correct = 0
-                show_stacked_images(stacked_source_memory[source_memory_trial] + [no_reward],duration=1)
+                context_reward = False
         if source_key_list[2] in key: # 3
             choice = 'context_3'
             if filtered_context[source_memory_trial]=='3':
                 correct = 1
-                show_stacked_images(stacked_source_memory[source_memory_trial] + [reward],duration=1)
+                context_reward = True
             else:
                 correct = 0
-                show_stacked_images(stacked_source_memory[source_memory_trial] + [no_reward],duration=1)
+                context_reward = False
         if source_key_list[3] in key: # 4
             choice = 'context_4'
             if filtered_context[source_memory_trial]=='4':
                 correct = 1
-                show_stacked_images(stacked_source_memory[source_memory_trial] + [reward],duration=1)
+                context_reward = True
             else:
                 correct = 0
-                show_stacked_images(stacked_source_memory[source_memory_trial] + [no_reward],duration=1)
+                context_reward = False
         if source_key_list[4] in key: # 5
             choice = 'context_5'
             if filtered_context[source_memory_trial]=='5':
                 correct = 1
-                show_stacked_images(stacked_source_memory[source_memory_trial] + [reward],duration=1)
+                context_reward = True
             else:
                 correct = 0
-                show_stacked_images(stacked_source_memory[source_memory_trial] + [no_reward],duration=1)
+                context_reward = False
         if source_key_list[5] in key: # 6
             choice = 'context_6'
             if filtered_context[source_memory_trial]=='6':
                 correct = 1
-                show_stacked_images(stacked_source_memory[source_memory_trial] + [reward],duration=1)
+                context_reward = True
             else:
                 correct = 0
-                show_stacked_images(stacked_source_memory[source_memory_trial] + [no_reward],duration=1)
-        if correct == 0:
-            indices_of_5s = [i for i, val in enumerate(first_bonus) if val == 5]
-            if indices_of_5s:
-                # Pick a random index where there's a 5
-                random_index = random.choice(indices_of_5s)
-                # Remove the 5 at that index
-                del first_bonus[random_index]
+                context_reward = False
         study.append({
             "ID": "",
-            "TrialType":f"source_memory",
+            "TrialType":f"source_memory_{source_memory_trial+1}",
             "PayoutDistNum":"",
             "BlockNum": "",
             "contextOrder": "",
@@ -1789,6 +1840,17 @@ def pt2_source_memory():
             "TimeInBlock": island_clock.getTime(),
             "Bonus":""
         })
+        if context_reward:
+            show_stacked_images(stacked_source_memory[source_memory_trial] + [reward],duration=1,data=f'display_sourcememory_reward_{source_memory_trial+1}')
+        else:
+            show_stacked_images(stacked_source_memory[source_memory_trial] + [no_reward],duration=1,data=f'display_sourcememory_reward_{source_memory_trial+1}')
+        if correct == 0:
+            indices_of_5s = [i for i, val in enumerate(first_bonus) if val == 5]
+            if indices_of_5s:
+                # Pick a random index where there's a 5
+                random_index = random.choice(indices_of_5s)
+                # Remove the 5 at that index
+                del first_bonus[random_index]
         source_memory_trial +=1
         if source_memory_trial == len(stacked_source_memory):
             pass
@@ -1798,7 +1860,7 @@ def pt2_source_memory():
     else:
         study.append({
             "ID": "",
-            "TrialType":f"source_memory",
+            "TrialType":f"source_memory_{source_memory_trial+1}",
             "PayoutDistNum":"",
             "BlockNum": "",
             "contextOrder": "",
@@ -1848,6 +1910,7 @@ def pt2_best_pirate():
     choice = "none" # No response
     if resp_key:
         key,RT = resp_key[0] # RT used for data collection
+        time = experiment_clock.getTime()
         if source_key_list[0] in key: # 1
             choice = 'red_pirate'
             show_stacked_images(stacked_best_pirate[best_pirate_trial] + [red_best],duration=1, y=[0.1,0.1,-0.2,-0.2])
@@ -1859,7 +1922,7 @@ def pt2_best_pirate():
             show_stacked_images(stacked_best_pirate[best_pirate_trial] + [black_best],duration=1, y = [0.1,0.1,-0.2,-0.2])
         study.append({
             "ID": "",
-            "TrialType":f"best_pirate",
+            "TrialType":f"best_pirate_{best_pirate_trial+1}",
             "PayoutDistNum":"",
             "BlockNum": "",
             "contextOrder": "",
@@ -1868,7 +1931,7 @@ def pt2_best_pirate():
             "reward_rate_black":"",
             "probe_order": "",
             "QuizFailedNum": "",
-            "TimeElapsed": experiment_clock.getTime(),
+            "TimeElapsed": time,
             "key_press": key,
             "RT": RT,
             "context": context_order_labels[best_pirate_trial],
@@ -1903,6 +1966,7 @@ def pt2_second_best_pirate():
     choice = "none" # No response
     if resp_key:
         key,RT = resp_key[0] # RT used for data collection
+        time = experiment_clock.getTime()
         if source_key_list[0] in key: # 1
             choice = 'red_pirate'
             show_stacked_images(stacked_second_best_pirate[best_pirate_trial] + [red_second_best],duration=1, y=[0.1,0.1,-0.2,-0.2])
@@ -1914,7 +1978,7 @@ def pt2_second_best_pirate():
             show_stacked_images(stacked_second_best_pirate[best_pirate_trial] + [black_second_best],duration=1, y = [0.1,0.1,-0.2,-0.2])
         study.append({
             "ID": "",
-            "TrialType":f"second_best_pirate",
+            "TrialType":f"second_best_pirate_{best_pirate_trial+1}",
             "PayoutDistNum":"",
             "BlockNum": "",
             "contextOrder": "",
@@ -1923,7 +1987,7 @@ def pt2_second_best_pirate():
             "reward_rate_black":"",
             "probe_order": "",
             "QuizFailedNum": "",
-            "TimeElapsed": experiment_clock.getTime(),
+            "TimeElapsed": time,
             "key_press": key,
             "RT": RT,
             "context": context_order_labels[best_pirate_trial],

@@ -365,7 +365,7 @@ for block in sorted(block_to_candidates.keys()):
     valid_probe_trials.extend(sampled)
 
 num_invalid_probes = 10
-num_total_probes = len(valid_probe_trials) + num_invalid_probes  # = 60
+num_total_probes = len(valid_probe_trials) + num_invalid_probes +1 # = 60
 
 log_rand = np.log(np.random.rand(num_total_probes))
 log_rand_div_mean_ct = log_rand / (1 / mean_ct)

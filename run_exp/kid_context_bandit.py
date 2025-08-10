@@ -393,7 +393,7 @@ for block in sorted(block_to_candidates.keys()):
     valid_probe_trials.extend(sampled)
 
 num_invalid_probes = 10
-num_total_probes = len(valid_probe_trials) + num_invalid_probes  # = 60
+num_total_probes = len(valid_probe_trials) + num_invalid_probes # + 1 # = 60
 
 log_rand = np.log(np.random.rand(num_total_probes))
 log_rand_div_mean_ct = log_rand / (1 / mean_ct)
@@ -1491,7 +1491,7 @@ def init_responses():
         valid_probe_trials.extend(sampled)
 
     # --- PART 2: Filter valid_probe_trials using response_check ---
-    response_check = np.random.randint(1,2,180)
+    # response_check = np.random.randint(1,2,180)
     # COMMENT OUTTTTT
     context_num = [str(i+1) for i in range(num_blocks)]  # e.g., ['1','2','3','4','5','6']
     for trial_idx in valid_probe_trials:
@@ -1534,7 +1534,7 @@ def init_responses():
 def pt2_memory_probes(choice_blocks=choice_blocks):
     """Running the seventh room and intermittent memory trials"""
     global pt2_index,study,bonus_money,bonus_correct
-    for block in choice_blocks:
+    for b_index, block in enumerate(choice_blocks):
         for trial in range(block):
             for img_path in stacked_seven_room_pirates[pt2_index]: # Show all pirates and take responses
                 stim = visual.ImageStim(win, image=img_path,size=(1.2,1.2))
@@ -1618,6 +1618,7 @@ def pt2_memory_probes(choice_blocks=choice_blocks):
                 })
                 pt2_index +=1
                 too_slow()
+        # if b_index != len(choice_blocks)-1:
         get_memory_probe()
     bonus_money = max(int(np.round(bonus_correct)),0) # Rounds payment to the dollar and then makes sure it is 0 or positive
 

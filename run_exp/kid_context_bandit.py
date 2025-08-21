@@ -561,7 +561,11 @@ def write_study():
     """Writes study.yaml file with data output var"""
     if not participant_id:
         raise Exception("Shouldn't write to original study file! Please provide a valid subject ID.")
-    with open(study_filename(participant_id), 'w') as file:
+     # Create "yaml" folder if it doesn't exist
+    os.makedirs("yaml", exist_ok=True)
+    # Save inside "yaml" folder
+    filename = os.path.join("yaml", study_filename(participant_id))
+    with open(filename, 'w') as file:
         for row in study:
             if isinstance(row.get("AlienOrder"), np.ndarray):
                 row["AlienOrder"] = row["AlienOrder"].tolist()
@@ -797,7 +801,7 @@ def too_slow():
         "Bonus":""
     })
 
-# Rocket travel trials
+# Ship travel trials
 def travel_trial():
     """Simulates travel sequence"""
     global study

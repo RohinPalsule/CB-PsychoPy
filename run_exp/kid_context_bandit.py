@@ -1638,7 +1638,7 @@ def pt2_memory_probes(choice_blocks=choice_blocks):
                 if pt2_index < num_trials:
                     show_stacked_images(img_paths=pirateChoice,duration=1)
                     show_stacked_images(img_paths=pirateReward,duration=1,data=f'pt2_display_reward_{pt2_index+1}')
-                    show_stacked_images(img_paths=stacked_seven_room[pt2_index],duration=iti+pt2_jitter)
+                    show_stacked_images(img_paths=stacked_seven_room[pt2_index],duration=iti+pt2_jitter[pt2_index])
                     pt2_index +=1
                     write_study()  
                 else: pass
@@ -1762,10 +1762,10 @@ def get_memory_probe():
         })
         if is_there_reward:
             show_stacked_images(stacked_recog[probed_mem_trial] + [reward_small],duration=1,data=f'display_memoryprobe_reward_{probed_mem_trial+1}')
-            show_stacked_images(img_paths=stacked_seven_room[probed_mem_trial],duration=iti+probe_jitter)
+            show_stacked_images(img_paths=stacked_seven_room[probed_mem_trial],duration=iti+probe_jitter[probed_mem_trial])
         else:
             show_stacked_images(stacked_recog[probed_mem_trial] + [reward_no_pt2],duration=1,data=f'display_memoryprobe_reward_{probed_mem_trial+1}')
-            show_stacked_images(img_paths=stacked_seven_room[probed_mem_trial],duration=iti+probe_jitter)
+            show_stacked_images(img_paths=stacked_seven_room[probed_mem_trial],duration=iti+probe_jitter[probed_mem_trial])
         probed_mem_trial +=1
         
         write_study()  

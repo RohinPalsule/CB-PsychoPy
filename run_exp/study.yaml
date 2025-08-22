@@ -33,6 +33,7 @@ params:
   rotation_trials: [40, 80, 120, 160, 200, 240, 280, 320, 360, 400, 440]
   deterministic_trials: [30, 70, 110, 150, 190]
   ctx_bump: 2
+  iti: 1
 ship_sequence:
   - "travel/ship_up.png"
   - "travel/ship_down.png"

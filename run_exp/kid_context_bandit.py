@@ -6,6 +6,7 @@ import sys
 import os
 import yaml
 import random
+import argparse
 # Load config
 with open("study.yaml", "r") as f:
     config = yaml.safe_load(f)
@@ -224,7 +225,6 @@ goal_summary2 = "If they were not successful in robbing the ship, then you will 
 how_to_pick_summary = "Also, just like before, you will use the 1,2,3 keys on your keyboard to pick a pirate. Press '1' to choose red beard, '2' to choose white beard, and '3' to choose black beard. You only have 3 seconds to pick a pirate, so please make a choice quickly!" + space_bar
 
 #//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-
 final_place = "You’ve arrived at the final island of your journey! Unfortunately, it’s very foggy out, so you won’t be able to see it in the distance like the other islands you've visited.\n\nYou’ll still be deciding which pirate you want to rob a ship like before. However, because of the fog, you also won’t be able to see the ship.\n\nThis means you do not have to remember the ships you rob on this island.\n\nUnlike before, you won't be visiting multiple islands today. You will stay on this island for the entire game. This part will last ~30 minutes." + space_bar
 recognition_1 = "Sometimes you’ll be shown a ship, and you will be asked if you saw this ship on a past island. Here is an example of what you will see." + space_bar
 recognition_2 = "You will press the 5, 6, 7, 8 keys on your keyboard to respond.\n\nIf you are sure you saw the ship, press 5 on your keyboard.\nIf you think you saw it before but aren't sure, then press 6.\nIf you think you have not seen it before but aren't sure, then press 7.\nIf you are sure you did not see the ship before, then press 8.\n\nYou will not see these trials everytime, but please be prepared to answer them. We recommend having your LEFT hand on the numbers 1-3 and your RIGHT hand on numbers 5-8." + space_bar
@@ -254,6 +254,7 @@ drift_noise = config['params']['drift_noise']
 rotation_trials = config['params']['rotation_trials']
 deterministic_trials = config['params']['deterministic_trials']
 ctx_bump = config['params']['ctx_bump']
+iti = config['params']['iti']
 
 # ------------------------- BELOW IS OLD CODE NEED TO REMOVE ------------------------------
 # Add bumped deterministic trials
@@ -543,8 +544,40 @@ if len(sys.argv) < 2: # Call participant ID in terminal
     print("Usage: python3 experiment.py <participant_id>")
     sys.exit(1)  # Exit with error code 1
 
+# ---------------------------------  Terminal shortcuts ---------------------------------
+
+parser = argparse.ArgumentParser()
+
 # Get participant ID from command-line argument
-participant_id = sys.argv[1]
+# First argument is positional (no -- needed)
+parser.add_argument("participant_id", type=str,
+                    help="Participant ID")
+
+parser.add_argument("-s", "--study", action="store_true",
+                    help="Run study phase first")
+
+parser.add_argument("-d", "--debug", action="store_true",
+                    help="Assume all trials are correct (for later phase testing)")
+
+parser.add_argument("-c", "--choice", action="store_true",
+                    help="Start experiment in room 7 with choice trials")
+
+parser.add_argument("-sm", "--source", action="store_true",
+                    help="Start experiment with source memory trials")
+
+args = parser.parse_args()
+
+print("participant_id =", args.participant_id)
+print("study_first =", args.study)
+participant_id = args.participant_id
+
+# Initialize vars from terminal args (probably redundant code)
+study_first = True if args.study else False
+debug = True if args.debug else False
+choice_first = True if args.choice else False
+source_first = True if args.source else False
+
+# ---------------------------------------------------------------------------------------
 
 # Init data var
 study = []
@@ -570,6 +603,17 @@ def write_study():
             if isinstance(row.get("AlienOrder"), np.ndarray):
                 row["AlienOrder"] = row["AlienOrder"].tolist()
         yaml.dump(study, file)
+
+# Make jitter values for fmri
+def make_jitter(num_trials=num_trials, debugging=False, minJit=-0.5, meanJit=1, maxJit=7):
+    if debugging:
+        return np.zeros(num_trials) 
+    u = np.random.rand(num_trials)
+    # Exponential transform
+    jitter = -np.ceil(np.log(u) / (1/meanJit)) + minJit
+    # Cap at maximum
+    jitter[jitter > maxJit] = maxJit
+    return jitter
 
 # Modify probe numbers for data collection
 probe_nums = []
@@ -810,7 +854,7 @@ def travel_trial():
         stim.draw()
         win.flip()
         core.wait(1)
-    core.wait(1)
+    core.wait(iti)
     study.append({
         "ID": "",
         "TrialType":f"new_island",
@@ -951,7 +995,7 @@ def practice_pirates(text=pick_pirate,switch='win'):
         show_text(text=loss_text,height=0.6,image_path=pirate_loss)
             
 # Where the main task is run
-
+practice_jitter = make_jitter(10)
 def practice_pirate_loop(duration=3,setting = 'desert'):
     """For choosing the pirate, getting the probe, and seeing if there is a reward"""
     global curr_prac_trial,study
@@ -1032,7 +1076,7 @@ def practice_pirate_loop(duration=3,setting = 'desert'):
         show_stacked_images(img_paths=pirateChoice,duration=1)
         show_stacked_images(img_paths=pirateProbe,duration=2,data='practice_probe_appear')
         show_stacked_images(img_paths=pirateReward,duration=1,data='reward_appear')
-        show_stacked_images(img_paths=[deck,set_img],duration=1)
+        show_stacked_images(img_paths=[deck,set_img],duration=iti+practice_jitter[curr_prac_trial])
         
         curr_prac_trial +=1
         if curr_prac_trial < 5:
@@ -1171,7 +1215,7 @@ def practice_probe_recog():
         })
     if combined_wrong >= 5:
         practice_wrong_counter += 1
-        if practice_wrong_counter == 4:
+        if practice_wrong_counter == 3:
             show_text("Unfortuantely you do not qualify for the remainder of the experiment. Please contact your experimenter to recieve your compensation up to this point.")
             save_data()
             core.quit()
@@ -1201,6 +1245,8 @@ def repeat_instructions():
     show_stacked_images(desert_welcome,duration=3)
     practice_pirate_loop()
 first_bonus = []
+
+learn_jitter = make_jitter(num_trials=first_block + (block_len * (num_blocks - 1)))
 def learn_phase_loop():
     """For choosing the pirate, getting the probe, and seeing if there is a reward"""
     global curr_trial,study,island_clock
@@ -1261,7 +1307,7 @@ def learn_phase_loop():
         show_stacked_images(img_paths=pirateChoice,duration=1)
         show_stacked_images(img_paths=pirateProbe,duration=2,data=f'display_probe_{curr_trial+1}')
         show_stacked_images(img_paths=pirateReward,duration=1,data=f'display_reward_{curr_trial+1}')
-        show_stacked_images(img_paths=stacked_island_nopirate[curr_trial],duration=1)
+        show_stacked_images(img_paths=stacked_island_nopirate[curr_trial],duration=iti+learn_jitter[curr_trial])
         if ifReward[int(key)][curr_trial] == 1:
             first_bonus.append(5)
         else: first_bonus.append(0)
@@ -1495,8 +1541,9 @@ def init_responses():
         valid_probe_trials.extend(sampled)
 
     # --- PART 2: Filter valid_probe_trials using response_check ---
-    # response_check = np.random.randint(1,2,180)
-    # COMMENT OUTTTTT
+    if debug:
+        response_check = np.random.randint(1,2,180)
+
     context_num = [str(i+1) for i in range(num_blocks)]  # e.g., ['1','2','3','4','5','6']
     for trial_idx in valid_probe_trials:
         response_sorted.append(response_check[trial_idx])
@@ -1535,6 +1582,7 @@ def init_responses():
     for i in range(len(final_memory_probes)):
         stacked_recog.append([recog_question,probe_ship,final_memory_probes[i]])
 
+pt2_jitter = make_jitter(num_trials=130) # Number of pt2 trials
 def pt2_memory_probes(choice_blocks=choice_blocks):
     """Running the seventh room and intermittent memory trials"""
     global pt2_index,study,bonus_money,bonus_correct
@@ -1590,7 +1638,7 @@ def pt2_memory_probes(choice_blocks=choice_blocks):
                 if pt2_index < num_trials:
                     show_stacked_images(img_paths=pirateChoice,duration=1)
                     show_stacked_images(img_paths=pirateReward,duration=1,data=f'pt2_display_reward_{pt2_index+1}')
-                    show_stacked_images(img_paths=stacked_seven_room[pt2_index],duration=1)
+                    show_stacked_images(img_paths=stacked_seven_room[pt2_index],duration=iti+pt2_jitter)
                     pt2_index +=1
                     write_study()  
                 else: pass
@@ -1625,7 +1673,7 @@ def pt2_memory_probes(choice_blocks=choice_blocks):
         # if b_index != len(choice_blocks)-1:
         get_memory_probe()
     bonus_money = max(int(np.round(bonus_correct)),0) # Rounds payment to the dollar and then makes sure it is 0 or positive
-
+probe_jitter = make_jitter(num_trials=len(choice_blocks))
 def get_memory_probe():
     """Making the pt 2 probe memory questions"""
     global probed_mem_trial,final_memory_probes,old_probe_list_shuffled,new_probe_list_shuffled,study,bonus_correct
@@ -1714,8 +1762,10 @@ def get_memory_probe():
         })
         if is_there_reward:
             show_stacked_images(stacked_recog[probed_mem_trial] + [reward_small],duration=1,data=f'display_memoryprobe_reward_{probed_mem_trial+1}')
+            show_stacked_images(img_paths=stacked_seven_room[probed_mem_trial],duration=iti+probe_jitter)
         else:
             show_stacked_images(stacked_recog[probed_mem_trial] + [reward_no_pt2],duration=1,data=f'display_memoryprobe_reward_{probed_mem_trial+1}')
+            show_stacked_images(img_paths=stacked_seven_room[probed_mem_trial],duration=iti+probe_jitter)
         probed_mem_trial +=1
         
         write_study()  
@@ -1758,7 +1808,7 @@ def source_memory_init():
     filtered_context = [val for val in final_probed_context if val != "NA"]
 
 source_memory_trial = 0
-
+source_jitter = make_jitter(num_trials=len(stacked_source_memory))
 def pt2_source_memory():
     """Source memory trials in part 2"""
     global stacked_source_memory,source_memory_trial
@@ -1847,8 +1897,10 @@ def pt2_source_memory():
         })
         if context_reward:
             show_stacked_images(stacked_source_memory[source_memory_trial] + [reward],duration=1,data=f'display_sourcememory_reward_{source_memory_trial+1}')
+            show_blank_screen(iti + source_jitter[source_memory_trial])
         else:
             show_stacked_images(stacked_source_memory[source_memory_trial] + [no_reward],duration=1,data=f'display_sourcememory_reward_{source_memory_trial+1}')
+            show_blank_screen(iti + source_jitter[source_memory_trial])
         if correct == 0:
             indices_of_5s = [i for i, val in enumerate(first_bonus) if val == 5]
             if indices_of_5s:
@@ -1860,7 +1912,6 @@ def pt2_source_memory():
         if source_memory_trial == len(stacked_source_memory):
             pass
         else: 
-            show_blank_screen()
             pt2_source_memory()
     else:
         study.append({
@@ -1893,7 +1944,7 @@ def pt2_source_memory():
         if source_memory_trial == len(stacked_source_memory):
             pass
         else: 
-            show_blank_screen()
+            show_blank_screen(iti+source_jitter[source_memory_trial-1])
             pt2_source_memory()
 
 def show_blank_screen(duration=0.5):
@@ -2071,74 +2122,79 @@ def save_data(participant_id, trials,end=False):
 
     print(f"Data saved to {filename}") # Confirmation that data saved
 
-
-
 # Main experiment flow
 
-show_text(welcome_txt)
+if not (study_first or choice_first or source_first):
+    show_text(welcome_txt)
 
-show_text(different_places,image_path= all_contexts,height=0.3)
+    show_text(different_places,image_path= all_contexts,height=0.3)
 
-show_text(goal_of_game_1,image_path=tutorial_ship,height=0.3)
+    show_text(goal_of_game_1,image_path=tutorial_ship,height=0.3)
 
-show_text(goal_of_game_2a+space_bar,image_path=tutorial_all_pirates,height=0.5,img_pos=-0.3)
+    show_text(goal_of_game_2a+space_bar,image_path=tutorial_all_pirates,height=0.5,img_pos=-0.3)
 
-show_multi_img_text([goal_of_game_2b,goal_of_game_2c,goal_of_game_2d],image_paths=[tutorial_reward,tutorial_noreward],heights=[0.7,0.0,-0.7],img_pos=[0.35,-0.35],x=0.3,y=0.4)
+    show_multi_img_text([goal_of_game_2b,goal_of_game_2c,goal_of_game_2d],image_paths=[tutorial_reward,tutorial_noreward],heights=[0.7,0.0,-0.7],img_pos=[0.35,-0.35],x=0.3,y=0.4)
 
-show_text(probabilistic,image_path=tutorial_blue_pirate,height=0.5,keys=['1'])
+    show_text(probabilistic,image_path=tutorial_blue_pirate,height=0.5,keys=['1'])
 
-practice_blue_loop()
+    practice_blue_loop()
 
-show_text(blue_beard_outcome,keys=['space'])
+    show_text(blue_beard_outcome,keys=['space'])
 
-practice_pirates()
+    practice_pirates()
 
-practice_pirates(text=pick_pirate_again,switch='nowin')
+    practice_pirates(text=pick_pirate_again,switch='nowin')
 
-show_text(text=time_out,height=0.5,image_path=timeout_img)
+    show_text(text=time_out,height=0.5,image_path=timeout_img)
 
-show_text(text=probe,height=0.5,image_path=example_probe)
+    show_text(text=probe,height=0.5,image_path=example_probe)
 
-show_text(text=probe2,height=0.5,image_path=example_probe)
+    show_text(text=probe2,height=0.5,image_path=example_probe)
 
-show_text(text=changepoint)
+    show_text(text=changepoint)
 
-show_text(text=drift,height=0.4,image_path=contingency,img_pos=-0.4)
+    show_text(text=drift,height=0.4,image_path=contingency,img_pos=-0.4)
 
-show_text(text=summary)
+    show_text(text=summary)
 
-show_stacked_images(desert_welcome,duration=3)
+    show_stacked_images(desert_welcome,duration=3)
 
-practice_pirate_loop()
+    practice_pirate_loop()
 
-show_text(quiz_intro)
+    show_text(quiz_intro)
 
-run_quiz()
+    run_quiz()
 
-show_text("Good job! You’re now ready to move on to the real game! Remember this game will be difficult but don't get discouraged and try your best!" + space_bar)
+if not (choice_first or source_first):
+    show_text("Good job! You’re now ready to move on to the real game! Remember this game will be difficult but don't get discouraged and try your best!" + space_bar)
 
-save_data(participant_id,study)
+    save_data(participant_id,study)
 
-learn_phase_loop()
+    learn_phase_loop()
 
-save_data(participant_id,study)
+    save_data(participant_id,study)
 
-show_text("You are all done with the first part of the study! Thank you for participating.\n\n\n\nPress the spacebar to continue")
-take_big_break()
+    show_text("You are all done with the first part of the study! Thank you for participating.\n\n\n\nPress the spacebar to continue")
+    take_big_break()
 
-show_multi_img_text([goal_summary,goal_summary2,space_bar],image_paths=[tutorial_reward,tutorial_noreward],heights=[0.6,-0.1,-0.7],img_pos=[0.2,-0.4],x=0.3,y=0.4)
+    show_multi_img_text([goal_summary,goal_summary2,space_bar],image_paths=[tutorial_reward,tutorial_noreward],heights=[0.6,-0.1,-0.7],img_pos=[0.2,-0.4],x=0.3,y=0.4)
 
-show_text(how_to_pick_summary)
+if not source_first:
 
-show_text(text=recognition_1,image_path=example_recog,height=0.5)
+    show_text(how_to_pick_summary)
 
-show_text(text=recognition_2,image_path=example_recog,height=0.4,img_pos=-0.5,text_height=0.06)
+    show_text(text=recognition_1,image_path=example_recog,height=0.5)
 
-show_multi_img_text(texts=[recognition_3,recognition_3b,recognition_3c],image_paths=[memory_reward,tutorial_noreward],heights=[0.6,0.1,-0.6],img_pos=[0.35,-0.20],x=0.3,y=0.4)
+    show_text(text=recognition_2,image_path=example_recog,height=0.4,img_pos=-0.5,text_height=0.06)
 
-show_text(begin_final)
-init_responses()
-pt2_memory_probes(choice_blocks=choice_blocks)
+    show_multi_img_text(texts=[recognition_3,recognition_3b,recognition_3c],image_paths=[memory_reward,tutorial_noreward],heights=[0.6,0.1,-0.6],img_pos=[0.35,-0.20],x=0.3,y=0.4)
+
+    show_text(begin_final)
+
+init_responses() # Needs to be in both choice and source
+
+if not source_first:
+    pt2_memory_probes(choice_blocks=choice_blocks)
 
 show_text(text=source_memory + space_bar,height=0.5,image_path=pt2_source_memory_img,img_pos=-0.4)
 

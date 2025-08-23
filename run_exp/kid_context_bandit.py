@@ -1808,7 +1808,7 @@ def source_memory_init():
     filtered_context = [val for val in final_probed_context if val != "NA"]
 
 source_memory_trial = 0
-source_jitter = make_jitter(num_trials=len(stacked_source_memory))
+source_jitter = make_jitter(num_trials=len(old_probe_list_shuffled))
 def pt2_source_memory():
     """Source memory trials in part 2"""
     global stacked_source_memory,source_memory_trial

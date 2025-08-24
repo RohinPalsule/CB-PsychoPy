@@ -1075,7 +1075,7 @@ def practice_pirate_loop(duration=3,setting = 'desert'):
         })
         show_stacked_images(img_paths=pirateChoice,duration=1)
         show_stacked_images(img_paths=pirateProbe,duration=2,data='practice_probe_appear')
-        show_stacked_images(img_paths=pirateReward,duration=1,data='reward_appear')
+        show_stacked_images(img_paths=pirateReward,duration=1.5,data='reward_appear')
         show_stacked_images(img_paths=[deck,set_img],duration=iti+practice_jitter[curr_prac_trial])
         
         curr_prac_trial +=1
@@ -1306,7 +1306,7 @@ def learn_phase_loop():
         })
         show_stacked_images(img_paths=pirateChoice,duration=1)
         show_stacked_images(img_paths=pirateProbe,duration=2,data=f'display_probe_{curr_trial+1}')
-        show_stacked_images(img_paths=pirateReward,duration=1,data=f'display_reward_{curr_trial+1}')
+        show_stacked_images(img_paths=pirateReward,duration=1.5,data=f'display_reward_{curr_trial+1}')
         show_stacked_images(img_paths=stacked_island_nopirate[curr_trial],duration=iti+learn_jitter[curr_trial])
         if ifReward[int(key)][curr_trial] == 1:
             first_bonus.append(5)
@@ -1637,7 +1637,7 @@ def pt2_memory_probes(choice_blocks=choice_blocks):
                     })
                 if pt2_index < num_trials:
                     show_stacked_images(img_paths=pirateChoice,duration=1)
-                    show_stacked_images(img_paths=pirateReward,duration=1,data=f'pt2_display_reward_{pt2_index+1}')
+                    show_stacked_images(img_paths=pirateReward,duration=1.5,data=f'pt2_display_reward_{pt2_index+1}')
                     show_stacked_images(img_paths=stacked_seven_room[pt2_index],duration=iti+pt2_jitter[pt2_index])
                     pt2_index +=1
                     write_study()  
@@ -1761,10 +1761,10 @@ def get_memory_probe():
             "Bonus":""
         })
         if is_there_reward:
-            show_stacked_images(stacked_recog[probed_mem_trial] + [reward_small],duration=1,data=f'display_memoryprobe_reward_{probed_mem_trial+1}')
+            show_stacked_images(stacked_recog[probed_mem_trial] + [reward_small],duration=1.5,data=f'display_memoryprobe_reward_{probed_mem_trial+1}')
             show_stacked_images(img_paths=stacked_seven_room[probed_mem_trial],duration=iti+probe_jitter[probed_mem_trial])
         else:
-            show_stacked_images(stacked_recog[probed_mem_trial] + [reward_no_pt2],duration=1,data=f'display_memoryprobe_reward_{probed_mem_trial+1}')
+            show_stacked_images(stacked_recog[probed_mem_trial] + [reward_no_pt2],duration=1.5,data=f'display_memoryprobe_reward_{probed_mem_trial+1}')
             show_stacked_images(img_paths=stacked_seven_room[probed_mem_trial],duration=iti+probe_jitter[probed_mem_trial])
         probed_mem_trial +=1
         
@@ -1802,12 +1802,12 @@ stacked_source_memory = []
 filtered_context = []
 def source_memory_init():
     """Initializing source memory"""
-    global old_probe_list_shuffled,filtered_context
+    global old_probe_list_shuffled,filtered_context,source_jitter
     for i,probe in enumerate(old_probe_list_shuffled):
         stacked_source_memory.append([source_question,probe_ship,probe]+source_memory_contexts)
     filtered_context = [val for val in final_probed_context if val != "NA"]
     source_jitter = make_jitter(num_trials=len(stacked_source_memory))
-
+source_jitter = []
 source_memory_trial = 0
 def pt2_source_memory():
     """Source memory trials in part 2"""
@@ -1896,10 +1896,10 @@ def pt2_source_memory():
             "Bonus":""
         })
         if context_reward:
-            show_stacked_images(stacked_source_memory[source_memory_trial] + [reward],duration=1,data=f'display_sourcememory_reward_{source_memory_trial+1}')
+            show_stacked_images(stacked_source_memory[source_memory_trial] + [reward],duration=1.5,data=f'display_sourcememory_reward_{source_memory_trial+1}')
             show_blank_screen(iti + source_jitter[source_memory_trial])
         else:
-            show_stacked_images(stacked_source_memory[source_memory_trial] + [no_reward],duration=1,data=f'display_sourcememory_reward_{source_memory_trial+1}')
+            show_stacked_images(stacked_source_memory[source_memory_trial] + [no_reward],duration=1.5,data=f'display_sourcememory_reward_{source_memory_trial+1}')
             show_blank_screen(iti + source_jitter[source_memory_trial])
         if correct == 0:
             indices_of_5s = [i for i, val in enumerate(first_bonus) if val == 5]
